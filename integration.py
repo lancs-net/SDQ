@@ -74,7 +74,7 @@ class Integration(object):
 
     def _meter_helper(self, switch, source, destination, limit, meter_ids, port):
         meter_ids = self._check_meter_keys(switch, meter_ids)
-        _id = self._controller.call("enforce_service", [switch, source, switch, limit])
+        _id = self._controller.call("enforce_service", [switch, source, destination, limit])
         meter_ids[switch][destination] = {"meter_id" : _id, "limit" : limit, "port" : port}
         return meter_ids
 
@@ -82,19 +82,18 @@ class Integration(object):
         _max = self._fetch_max(switch, port)
         background = self._fetch_background(tier, switch, port)
         bandwidth =  _max - background
-        if bandwidth <= 0:
-            print 'What?! Minus bandwidth available. Nice work...'
-            bandwidth = abs(bandwidth)
+	bandwidth = bandwidth / 1024 #Convert to kilobytes for Mu's code
+	print {'available_bandwidth' : bandwidth}
         return bandwidth
 
     def _fetch_max(self, switch, port):
-        return self._controller.call("report_port", [switch, port])[1]
+        return self._controller.call("report_port", [False, True, switch, port])[3]
 
     def _fetch_background(self, tier, switch, port):
         background = 0
         for details in self._meters[tier]["background"][switch].values():
             if port == details["port"]:
-                background += self._controller.call("report_port", [switch, details["meter_id"]])[1]
+                background += self._controller.call("report_port", [True, False, switch, details["meter_id"]])[3]
         return background
 
     def _load_config(self, path):
@@ -103,12 +102,13 @@ class Integration(object):
             json_data.close()
 
     def _reset_counters(self):
-        for switch in self._combined_switches.keys():
-            self._controller.call("reset_switch_ports", [switch])
+	pass
+#        for switch in self._combined_switches.keys():
+#            self._controller.call("reset_switch_ports", [switch])
 
     def _fetch_stats(self, tier):
         for switch in self.config["network"][tier].keys():
-            switch_ports = self._controller.call("report_switch_ports", [switch])
+            switch_ports = self._controller.call("report_switch_ports", [False, False, switch])
             if self._compare_switch_ports(tier, switch, switch_ports):
                 self._recalculate(tier, switch)
 
@@ -138,19 +138,21 @@ class Integration(object):
 
     def _effect_first_tier_change(self, switch, result):
         for household in result:
-            source = '*'
+	    print 'household', household	            
+	   
+
             destination = self.config["servers"]["foreground"]
-            limit = household["limit"]
+            limit = household["limit"] * 1024 #Convert to bytes for Nic's code
             port = household["port"]
-            self._controller.call("enforce_service", [switch, source, destination, limit, port])
+            self._controller.call("enforce_service", [switch, source, destination, limit])
 
     def _effect_second_tier_change(self, switch, result):
         for client_id, allocation in result.iteritems():
             source = self.config["clients"]["foreground"][client_id]["ip"]
             destination = self.config["servers"]["foreground"]
-            limit = allocation[3]
+            limit = allocation[3] * 1024 #Convert to bytes for Nic's code
             port = self.config["clients"]["foreground"][client_id]["port"]
-            self._controller.call("enforce_service", [switch, source, destination, limit, port])
+            self._controller.call("enforce_service", [switch, source, destination, limit])
 
     def _lookup_server(self):
         return self.config["servers"][0]
@@ -200,9 +202,9 @@ class Integration(object):
     def _compare_switch_ports(self, tier, switch, switch_ports_result):
         for port, throughput in self._switch_ports[switch].iteritems():
             try:
-                self._update_max_throughput(switch, port, 'upload', switch_ports_result[port][0])
+                #self._update_max_throughput(switch, port, 'upload', switch_ports_result[port][0])
                 self._update_max_throughput(switch, port, 'download', switch_ports_result[port][1])
-                self._calculate_difference(switch_ports_result[port][0], throughput["upload"])
+                #self._calculate_difference(switch_ports_result[port][0], throughput["upload"])
                 self._calculate_difference(switch_ports_result[port][1], throughput["download"])
             except KeyError:
                 print 'Port not found in result. That\'s odd!'
@@ -250,7 +252,9 @@ class Integration(object):
                 elif method == "report_port":
                     return [random.randint(_min, _max), random.randint(_min, _max)]
             else:
-                return self._client.call(method, *params)
+		result = self._client.call(method, *params)
+		print {'method' : method, 'params' : params, 'result' : result}
+		return result
 
     class Experience(object):
 
