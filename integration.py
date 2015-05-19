@@ -6,6 +6,7 @@ import threading
 import random
 import calendar
 import time
+import logging
 
 from optparse import OptionParser
 
@@ -43,22 +44,40 @@ class Integration(object):
             self._max_throughput[switch] = (port_mapping)
 
     def _initialise_meters(self):
+        self._initialise_service_meters()
+        self._initialise_port_meters()
+
+    def _initialise_port_meters(self):
+        for tier in self.config["network"].keys():
+            for switch, value in self.config["network"][tier].iteritems():
+                port = value["uplink"]
+                limit = self.config["limits"][tier]
+                limit = limit  * 125 #Convert from kilobits to bytes
+                self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
+
+    def _initialise_service_meters(self):
         switch = None
         for tier in self.config["network"].keys():
             self._meters[tier] = {}
             if tier == 'first':
                 switch = self.config["network"][tier].keys()[0]
             for view, ip in self.config["servers"].iteritems():
-               self._meters[tier][view] =  self._create_meters(ip, self._capacity, view, switch)
+               self._meters[tier][view] =  self._create_service_meters(ip, self._capacity, view, switch)
 
-    def _create_meters(self, source, limit, view, switch=None):
+    def _create_service_meters(self, source, limit, view, switch=None):
         meter_ids = {}
         for client_id, details in self.config["clients"][view].iteritems():
             if switch:
                 port = self._match_first_tier_port(details["switch"])
-                meter_ids = self._meter_helper(switch, source, details["ip"], limit, meter_ids, port)
+                meter_ids = self._service_meter_helper(switch, source, details["ip"], limit, meter_ids, port)
             else:
-                meter_ids = self._meter_helper(details["switch"], source, details["ip"], limit, meter_ids, details["port"])
+                meter_ids = self._service_meter_helper(details["switch"], source, details["ip"], limit, meter_ids, details["port"])
+        return meter_ids
+
+    def _service_meter_helper(self, switch, source, destination, limit, meter_ids, port):
+        meter_ids = self._check_meter_keys(switch, meter_ids)
+        _id = self._controller.call(method="enforce_service", params=[switch, source, destination, limit])
+        meter_ids[switch][destination] = {"meter_id" : _id, "limit" : limit, "port" : port}
         return meter_ids
 
     def _match_first_tier_port(self, switch):
@@ -72,28 +91,21 @@ class Integration(object):
             meter_ids[switch] = {}
         return meter_ids
 
-    def _meter_helper(self, switch, source, destination, limit, meter_ids, port):
-        meter_ids = self._check_meter_keys(switch, meter_ids)
-        _id = self._controller.call("enforce_service", [switch, source, destination, limit])
-        meter_ids[switch][destination] = {"meter_id" : _id, "limit" : limit, "port" : port}
-        return meter_ids
-
     def _available_bandwidth(self, tier, switch, port):
         _max = self._fetch_max(switch, port)
         background = self._fetch_background(tier, switch, port)
         bandwidth =  _max - background
-	bandwidth = bandwidth / 1024 #Convert to kilobytes for Mu's code
-	print {'available_bandwidth' : bandwidth}
+        bandwidth = bandwidth * 0.008 #Convert from bytes to kilobits
         return bandwidth
 
     def _fetch_max(self, switch, port):
-        return self._controller.call("report_port", [False, True, switch, port])[3]
+        return self._controller.call(method="report_port", params=[False, True, switch, port])[1]
 
     def _fetch_background(self, tier, switch, port):
         background = 0
         for details in self._meters[tier]["background"][switch].values():
             if port == details["port"]:
-                background += self._controller.call("report_port", [True, False, switch, details["meter_id"]])[3]
+                background += self._controller.call(method="report_port", params=[True, False, switch, details["meter_id"]])[1]
         return background
 
     def _load_config(self, path):
@@ -102,19 +114,17 @@ class Integration(object):
             json_data.close()
 
     def _reset_counters(self):
-	pass
-#        for switch in self._combined_switches.keys():
-#            self._controller.call("reset_switch_ports", [switch])
+        pass #TODO: Not yet implemented in modified Ryu controller
+
 
     def _fetch_stats(self, tier):
         for switch in self.config["network"][tier].keys():
-            switch_ports = self._controller.call("report_switch_ports", [False, False, switch])
+            switch_ports = self._controller.call(method="report_switch_ports", params=[False, False, switch])
             if self._compare_switch_ports(tier, switch, switch_ports):
                 self._recalculate(tier, switch)
 
-    def _find_uplink_port(self, switch=None, client=None):
-        if switch:
-            return self._combined_switches[switch]["uplink"]
+    def _find_uplink_port(self, switch):
+        return self._combined_switches[switch]["uplink"]
 
     def _recalculate(self, tier, switch):
         if tier == 'first':
@@ -129,30 +139,33 @@ class Integration(object):
                 self._effect_second_tier_change(switch, result)
                 self._update_forgiveness_effect(result)
             except secondtiercaller.ImpossibleSolution as impossible:
-                print impossible
+                logging.debug('[integration][calculation] %s', impossible)
 
     def _update_forgiveness_effect(self, result):
         timestamp = calendar.timegm(time.gmtime())
         for client_id, allocation in result.iteritems():
-            self._experience.forgiveness_effect(client_id, timestamp, allocation[3])
+            self._experience.forgiveness_effect(client=client_id, timestamp=timestamp, bitrate=allocation[3])
 
     def _effect_first_tier_change(self, switch, result):
         for household in result:
-	    print 'household', household	            
-	   
+            switch, port = self._find_household_from_port(household["port"])
+            limit = household["limit"]
+            limit = limit * 125 #Convert from kilobits to bytes
+            self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
 
-            destination = self.config["servers"]["foreground"]
-            limit = household["limit"] * 1024 #Convert to bytes for Nic's code
-            port = household["port"]
-            self._controller.call("enforce_service", [switch, source, destination, limit])
+    def _find_household_from_port(self, port_to_find):
+        for details in self.config["network"]["first"].values():
+            for port, switch in details["port_mapping"].iteritems():
+                if port == port_to_find :
+                    (switch, self._find_uplink_port(switch))
 
     def _effect_second_tier_change(self, switch, result):
         for client_id, allocation in result.iteritems():
             source = self.config["clients"]["foreground"][client_id]["ip"]
             destination = self.config["servers"]["foreground"]
-            limit = allocation[3] * 1024 #Convert to bytes for Nic's code
-            port = self.config["clients"]["foreground"][client_id]["port"]
-            self._controller.call("enforce_service", [switch, source, destination, limit])
+            limit = allocation[3]
+            limit = limit * 125 #Convert from kilobits to bytes
+            self._controller.call(method="enforce_service", params=[switch, source, destination, limit])
 
     def _lookup_server(self):
         return self.config["servers"][0]
@@ -206,9 +219,10 @@ class Integration(object):
                 self._update_max_throughput(switch, port, 'download', switch_ports_result[port][1])
                 #self._calculate_difference(switch_ports_result[port][0], throughput["upload"])
                 self._calculate_difference(switch_ports_result[port][1], throughput["download"])
-            except KeyError:
-                print 'Port not found in result. That\'s odd!'
+            except KeyError as key:
+                logging.warning('[integration][comparison] Port not found in result: %s', key)
             except self.ChangeNotification as change:
+                logging.debug('[integration][comparison] %s', change)
                 return True
 
     def _calculate_difference(self, result, throughput):
@@ -234,27 +248,34 @@ class Integration(object):
             self._testing = testing
             self._client = pyjsonrpc.HttpClient(url = "http://" + host + ":" + port + "/jsonrpc")
 
-        def call(self, method, params):
+        def call(self, **kwargs):
+            result = None
+            logging.debug('[controller][call]: %s', kwargs)
             if self._testing:
-                _max = 20000
-                _min = 3000
-                print method, params
-                if method == 'report_switch_ports':
-                    return { "1":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "2":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "3":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "4":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "5":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "6":[random.randint(_min, _max), random.randint(_min, _max)],
-                    "7":[random.randint(_min, _max), random.randint(_min, _max)]}
-                elif method == "enforce_service":
-                    return random.randint(53, 200)
-                elif method == "report_port":
-                    return [random.randint(_min, _max), random.randint(_min, _max)]
+                if kwargs['method'] == 'report_switch_ports':
+                    result = { "1":self._generate_random_bandwidth(4),
+                    "2":self._generate_random_bandwidth(4),
+                    "3":self._generate_random_bandwidth(4),
+                    "4":self._generate_random_bandwidth(4),
+                    "5":self._generate_random_bandwidth(4),
+                    "6":self._generate_random_bandwidth(4),
+                    "7":self._generate_random_bandwidth(4)}
+                elif kwargs['method'] == "enforce_service":
+                    result = random.randint(53, 200)
+                elif kwargs['method'] == "report_port":
+                    result = self._generate_random_bandwidth(4)
             else:
-		result = self._client.call(method, *params)
-		print {'method' : method, 'params' : params, 'result' : result}
-		return result
+                result = self._client.call(kwargs['method'], *kwargs['params'])
+            logging.debug('[controller][result]: %s', result)
+            return result
+
+        def _generate_random_bandwidth(self, length):
+            _max = 20000000
+            _min = 300000
+            bandwidth = []
+            for _ in range(length):
+                bandwidth.append(random.randint(_min, _max))
+            return bandwidth
 
     class Experience(object):
 
@@ -262,21 +283,29 @@ class Integration(object):
             self.first_tier = firsttiercaller.FirstTier()
             self.second_tier = secondtiercaller.SecondTier()
 
-        def first(self, totalbw, households):
-            return self.first_tier.call(totalbw=totalbw, households=households)
+        def first(self, **kwargs):
+            logging.debug('[experience][first][call]: %s', kwargs)
+            result = self.first_tier.call(**kwargs)
+            logging.debug('[experience][first][result]: %s', result)
+            return result
 
-        def second(self, totalbw, clients):
-            return self.second_tier.call(totalbw=totalbw, clients=clients)
+        def second(self, **kwargs):
+            logging.debug('[experience][second]: %s', kwargs)
+            result = self.second_tier.call(**kwargs)
+            logging.debug('[experience][first][result]: %s', result)
+            return result
 
-        def forgiveness_effect(self, client, timestamp, bitrate):
-            self.second_tier.set_session_index(client, timestamp, bitrate)
+        def forgiveness_effect(self, **kwargs):
+            logging.debug('[experience][forgiveness]: %s', kwargs)
+            self.second_tier.set_session_index(**kwargs)
 
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("-i", "--interval", dest="interval", help="controller polling interval, measured in seconds", default=5.0)
     parser.add_option("-t", "--threshold", dest="threshold", help="change threshold at which to trigger a recalculation, measured in bytes", default=1000)
-    parser.add_option("-c", "--capacity", dest="capacity", help="maximum capacity to initialise meter to, measured in bytes", default=1000000)
+    parser.add_option("-c", "--capacity", dest="capacity", help="maximum capacity to initialise meter to, measured in bytes", default=1000000000)
     parser.add_option("-n", "--hostname", dest="host", help="controller hostname", default="localhost")
     parser.add_option("-p", "--port", dest="port", help="controller interface port", default=4000)
     (options, args) = parser.parse_args()
+    logging.basicConfig(filename='debug.log',level=logging.DEBUG, format='[%(asctime)s:%(levelname)s] %(message)s')
     integration = Integration("config.json", float(options.interval), int(options.threshold), int(options.capacity), options.host, str(options.port))
