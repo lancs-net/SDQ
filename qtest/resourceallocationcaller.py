@@ -26,7 +26,7 @@ import itertools
 import sys
 import time
 import math
-
+import logging
 
 #def main():
     #x1 = Symbol('x1')
@@ -59,6 +59,10 @@ class SecondTier(object):
     representations['360']=[100,200,400,600,800,1000]
     representations['720']=[100,200,400,600,800,1000,1500,2000]
     representations['1080']=[100,200,600,1000,2000,4000,6000,8000]
+
+#    def __init__(self):
+#	logging.info('test')
+#	logger = logging.getLogger(__name__)
 
     def call(self, totalbw, clients):
         self.output={}
@@ -160,6 +164,7 @@ class SecondTier(object):
             except:
                 #print "oops"
                 if b>10:
+		    logging.error("[mu]Impossible to find optimal points.")
                     raise ImpossibleSolution("ERROR: Impossible to fine optimial points.")
                     # sys.exit()
                 b+=1
@@ -167,6 +172,7 @@ class SecondTier(object):
             break
         #print result
         for client in clients:
+	    print result[client]
             clients[client].append(float(result[client]))
         return clients
 
@@ -277,7 +283,7 @@ class SecondTier(object):
         vqqueue.append(candi)
         #print vqqueue
         if len(vqqueue)<2:
-            print "SESSION LOG EMPTY! ERROR or NEW STREAM"
+            logging.warning("[mu] SESSION LOG EMPTY! ERROR or NEW STREAM")
             return "skip"
         i=1
         while i<len(vqqueue):
@@ -381,13 +387,13 @@ class SecondTier(object):
             for client in clients:
                 clientorder+=clients[client][0]+","
             #print clients
-            print "Client order:"+str(clientorder)
-            print "VQ report:"+str(bvrsd[0])
+            logging.debug("[mu] Client order:"+str(clientorder))
+            logging.debug("[mu] VQ report:"+str(bvrsd[0]))
         #for b in bvrsd:
             #print b
         #print "----"
         if not bvrsd:
-            print "ERROR: Impossible to find allocation solution. totalbw too small??"
+            logging.error("[mu] Impossible to find allocation solution. totalbw too small??")
             sys.exit()
         for client in clients:
             clients[client].append(bvrsd[0][0][client])
@@ -396,7 +402,7 @@ class SecondTier(object):
         ### COST calculation
         bvrsd.sort(key=lambda x: float(x[3]))
         if self.ext==1:
-                print "SI report:"+str(bvrsd[0])
+                logging.debug("[mu] SI report:"+str(bvrsd[0]))
         #for b in bvrsd:
             #print b
         #print "----"
@@ -406,7 +412,7 @@ class SecondTier(object):
         ### COST calculation
         bvrsd.sort(key=lambda x: float(x[4]))
         if self.ext==1:
-                print "CT report:"+str(bvrsd[0])
+                logging.debug("[mu] CT report:"+str(bvrsd[0]))
         #for b in bvrsd:
             #print b
         #print "----"
@@ -416,7 +422,7 @@ class SecondTier(object):
         ### Combine calculation
         bvrsd.sort(key=lambda x: float(x[8]))
         if self.ext==1:
-                print "AL report:"+str(bvrsd[0])
+                logging.debug("[mu] AL report:"+str(bvrsd[0]))
         #for b in bvrsd:
             #print b
         #print "----"
@@ -424,7 +430,7 @@ class SecondTier(object):
             clients[client].append(bvrsd[0][0][client])
             self.output[clients[client][0]].append(bvrsd[0][0][client])
         if self.ext==1:
-            print "Total BW:"+ str(totalbw)
+            logging.debug("[mu] Total BW:"+ str(totalbw))
             qboutput=0
             if max(qdock)!=0:
                 qboutput=refqdock/max(qdock)
@@ -434,7 +440,7 @@ class SecondTier(object):
             sboutput=0
             if max(sidock)!=0:
                 sboutput=refsidock[0]/max(sidock)
-            print "BASE report:"+str([refbcomb[0],refbvcomb[0],refqdock,refsidock[0],refcdock,qboutput,cboutput,sboutput,(qboutput+cboutput+sboutput)/3])
+            logging.debug("[mu] BASE report:"+str([refbcomb[0],refbvcomb[0],refqdock,refsidock[0],refcdock,qboutput,cboutput,sboutput,(qboutput+cboutput+sboutput)/3]))
 
 class ImpossibleSolution(Exception):
     pass
