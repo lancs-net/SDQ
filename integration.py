@@ -4,258 +4,216 @@ import pyjsonrpc
 import json
 import threading
 import random
+import logging
 import calendar
 import time
-import logging
 
+from pygraph.classes.digraph import digraph
 from optparse import OptionParser
 
 class Integration(object):
 
-    _switch_ports = {}
-    _combined_switches = {}
-    _max_throughput = {}
+    _testing = True
+    first = []
+    second = []
+    limits = []
+    tiers = ["first", "second"]
+    _switch_port_results= {}
     _first_tier_result_mapping = ['A', 'B', 'C', 'D', 'E']
-    _meters = {}
-    _testing = False
 
     def __init__(self, config, poll, threshold, capacity, host, port):
-        self._threshold = threshold
-        self._capacity = capacity
-        self._load_config(config)
-        self._merge_switch_tiers()
+        self._parse_graph(self._load_graph(config))
         self._controller = self.Controller(host, port, self._testing)
         self._experience = self.Experience()
         self._initialise_switch_ports()
-        self._initialise_meters()
-        self._reset_counters()
-        self._poll(float(poll), self.config["network"].keys())
+        self._threshold = threshold
+        self._poll(float(poll))
 
-    def _merge_switch_tiers(self):
-        self._combined_switches = self.config["network"]["first"].copy()
-        self._combined_switches.update(self.config["network"]["second"])
-	self._combined_switches.update(self.config["network"]["super"])
+    def _load_graph(self, path):
+        with open(path) as json_data:
+            graph = json.load(json_data)
+            json_data.close()
+        return graph
+
+    def _parse_graph(self, graph):
+        self._graph = digraph()
+        self._parse_nodes(graph)
+        self._parse_edges(graph)
+
+    def _parse_nodes(self, tree):
+        for _type, node in tree["nodes"].iteritems():
+            for _id, attrs in node.iteritems():
+                attrs["type"] = _type
+                self._graph.add_node(node=_id, attrs=attrs.items())
+                try:
+                    tier = getattr(self, attrs["tier"])
+                    tier.append(_id)
+                except KeyError:
+                    pass
+
+    def _parse_edges(self, tree):
+        for _id, attrs in tree["edges"].iteritems():
+            self._graph.add_edge(edge=tuple(attrs["items"]), wt=1, label=_id, attrs=attrs.items())
+            if "limit" in attrs.keys():
+                self.limits.append(tuple(attrs["items"]))
 
     def _initialise_switch_ports(self):
-        for switch, value in self._combined_switches.iteritems() :
-            port_mapping = {}
-            for port in value["port_mapping"].keys():
-                port_mapping[port] = {"upload" : 0, "download" : 0}
-            self._switch_ports[switch] = (port_mapping)
-            self._max_throughput[switch] = (port_mapping)
+        for edge in self.limits:
+            attrs = dict(self._graph.edge_attributes(edge))
+            switch = self._get_field_from_node(attrs["items"][0], "dpid")
+            self._controller.call(method="enforce_port_outbound", params=[switch, attrs["port"], attrs["limit"]])
 
-    def _initialise_meters(self):
-        self._initialise_service_meters()
-        self._initialise_port_meters()
+    def _poll(self, poll):
+        threading.Timer(poll, self._poll, [poll]).start()
+        for tier in self.tiers:
+            self._fetch_stats(tier)
 
-    def _initialise_port_meters(self):
-        for tier in self.config["network"].keys():
-            for connected_switch, value in self.config["network"][tier].iteritems():
-		#print value
-		try:
-               	    switch = value["port_mapping"][value["uplink"]]
-		except KeyError:
-		    continue
-		port = self._find_port_from_connected_switch(connected_switch, switch)
-		limit = self.config["limits"][tier]
-		#limit = limit  * 125 #Convert from kilobits to bytes
-                self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
+    def _get_field_from_node(self, node, field):
+        try:
+            return dict(self._graph.node_attributes(node))[str(field)]
+        except KeyError:
+            return {}
 
-    def _find_port_from_connected_switch(self, connected_switch, switch):
-       	details = self._combined_switches[switch]
-        for port, top_switch in details["port_mapping"].iteritems():
-            if connected_switch == top_switch:
-                return port
-
-
-    def _initialise_service_meters(self):
-        switch = None
-        for tier in self.config["network"].keys():
-            self._meters[tier] = {}
-            if tier == 'first':
-                switch = self.config["network"][tier].keys()[0]
-            for view, ip in self.config["servers"].iteritems():
-               self._meters[tier][view] =  self._create_service_meters(ip, self._capacity, view, switch)
-
-    def _create_service_meters(self, source, limit, view, switch=None):
-        meter_ids = {}
-        for client_id, details in self.config["clients"][view].iteritems():
-            if switch:
-                port = self._match_first_tier_port(details["switch"])
-                meter_ids = self._service_meter_helper(switch, source, details["ip"], limit, meter_ids, port)
-            else:
-                meter_ids = self._service_meter_helper(details["switch"], source, details["ip"], limit, meter_ids, details["port"])
-        return meter_ids
-
-    def _service_meter_helper(self, switch, source, destination, limit, meter_ids, port):
-        meter_ids = self._check_meter_keys(switch, meter_ids)
-        _id = self._controller.call(method="enforce_service", params=[switch, source, destination, limit])
-        meter_ids[switch][destination] = {"meter_id" : _id, "limit" : limit, "port" : port}
-        return meter_ids
-
-    def _match_first_tier_port(self, switch):
-        for details in self.config["network"]["first"].values():
-            for port, connection in details["port_mapping"].iteritems():
-                if switch == connection:
-                    return port
-
-    def _check_meter_keys(self, switch, meter_ids):
-        if switch not in meter_ids.keys():
-            meter_ids[switch] = {}
-        return meter_ids
-
-    def _available_bandwidth(self, tier, switch, port):
-        _max = self._fetch_max(switch, port)
-        background = self._fetch_background(tier, switch, port)
-        bandwidth =  _max - background
-        bandwidth = bandwidth * 0.008 #Convert from bytes to kilobits
-        return bandwidth
-
-    def _fetch_max(self, switch, port):
-        return self._controller.call(method="report_port", params=[False, True, switch, port])[3]
-
-    def _fetch_background(self, tier, switch, port):
-        background = 0
-        for details in self._meters[tier]["background"][switch].values():
-            if port == details["port"]:
-                background += self._controller.call(method="report_port", params=[False, False, switch, details["meter_id"]])[3]
-        return background
-
-    def _load_config(self, path):
-        with open(path) as json_data:
-            self.config = json.load(json_data)
-            json_data.close()
-
-    def _reset_counters(self):
-        pass #TODO: Not yet implemented in modified Ryu controller
-
+    def _get_field_from_edge(self, edge, field):
+        try:
+            return dict(self._graph.edge_attributes(edge))[str(field)]
+        except KeyError:
+            return {}
 
     def _fetch_stats(self, tier):
-        for switch in self.config["network"][tier].keys():
-            switch_ports = self._controller.call(method="report_switch_ports", params=[False, False, switch])
-            if self._compare_switch_ports(tier, switch, switch_ports):
-                self._recalculate(tier, switch)
+        nodes = getattr(self, tier)
+        for node in nodes:
+            switch = self._get_field_from_node(node, "dpid")
+            result = self._controller.call(method="report_switch_ports", params=[False, False, switch])
+            if self._compare_switch_ports(tier, switch, result):
+                 self._recalculate(tier, switch)
 
-    def _find_uplink_port(self, switch):
-        return self._combined_switches[switch]["uplink"]
+    def _compare_switch_ports(self, tier, switch, result):
+        if switch not in self._switch_port_results.keys():
+            self._switch_port_results[switch] = {}
+        for port, throughput in result.iteritems():
+            if port not in self._switch_port_results[switch].keys():
+                self._switch_port_results[switch][port] = throughput[1] #Should be tx?
+                continue
+            else:
+                current = throughput[1]
+                previous = self._switch_port_results[switch][port]
+            self._switch_port_results[switch][port] = throughput[1]
+            return self._calculate_difference(current, previous)
+
+    def _calculate_difference(self, current, previous):
+        difference = current - previous #download B/s
+        if abs(difference) >= self._threshold:
+            return True
 
     def _recalculate(self, tier, switch):
-        if tier == 'first':
-            totalbw, households = self._fetch_parameters(switch, tier)
-            result = self._experience.first(totalbw=totalbw, households=households)
-            result = self._fix_household_result(switch, result)
-            self._effect_first_tier_change(switch, result)
-        elif tier == 'second':
-            totalbw, clients = self._fetch_parameters(switch, tier)
-            try:
-                result = self._experience.second(totalbw=totalbw, clients=clients)
-                self._effect_second_tier_change(switch, result)
-                self._update_forgiveness_effect(result)
-            except secondtiercaller.ImpossibleSolution as impossible:
-                logging.debug('[integration][calculation] %s', impossible)
+        getattr(self, '_recalculate_' + tier + '_tier')(switch)
+
+    def _recalculate_first_tier(self, _):
+        totalbw, households = self._fetch_first_tier_stats()
+        result = self._experience.first(totalbw=totalbw, households=households)
+        result = self._fix_household_result(self.first[0], result)
+        self._effect_first_tier_change(self.first[0], result)
+
+    def _recalculate_second_tier(self, switch):
+        totalbw, clients, _ = self._fetch_second_tier_stats(switch)
+        result = self._experience.second(totalbw=totalbw, clients=clients)
+        self._effect_second_tier_change(switch, result)
+        self._update_forgiveness_effect(result)
 
     def _update_forgiveness_effect(self, result):
         timestamp = calendar.timegm(time.gmtime())
         for client_id, allocation in result.iteritems():
             self._experience.forgiveness_effect(client=client_id, timestamp=timestamp, bitrate=allocation[3])
 
-    def _effect_first_tier_change(self, switch, result):
-        for household in result:
-            switch, _ = self._find_household_from_port(household["port"])
-	    port = self._find_port_from_connected_switch(self, switch, self.config["network"]["first"].keys()[0])
-            limit = household["limit"]
-            print switch, port, limit
-	    #limit = limit * 125 #Convert from kilobits to bytes
+    def _effect_second_tier_change(self, switch, result):
+        for id_, allocation in result.iteritems():
+            limit = allocation[3]
+            node = self._find_node_from_label("dpid", switch)
+            port = self._get_field_from_edge((node, id_), "port")
             self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
 
-    def _find_household_from_port(self, port_to_find):
-        for details in self.config["network"]["first"].values():
-            for port, switch in details["port_mapping"].iteritems():
-                if port == port_to_find :
-                    return (switch, self._find_uplink_port(switch))
+    def _effect_first_tier_change(self, switch, result):
+        for household in result:
+            neighbor = self._get_node_from_label("household", household["households_id"])
+            node = self._find_node_from_label("dpid", switch)
+            port = self._get_field_from_edge((node, neighbor), "port")
+            limit = household["limit"]
+          #limit = limit * 125 #Convert from kilobits to bytes
+            self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
 
-    def _effect_second_tier_change(self, switch, result):
-        for client_id, allocation in result.iteritems():
-            source = self.config["clients"]["foreground"][client_id]["ip"]
-            destination = self.config["servers"]["foreground"]
-            limit = allocation[3]
-            #limit = limit * 125 #Convert from kilobits to bytes
-            self._controller.call(method="enforce_service", params=[switch, source, destination, limit])
+    def _fetch_first_tier_stats(self):
+        households = []
+        totalbw = 0
+        background = 0
+        neighbors = self._graph.neighbors(self.first[0])
+        for node in self.second:
+            household_available, _, household_background = self._fetch_second_tier_stats(node, dpid=False)
+            background += household_background
+            id_ = self._get_field_from_node(node, "household")
+            households.append((id_, household_available))
+        for neighbor in list(set(neighbors)-set(self.second)):
+            port = self._get_field_from_edge((node, neighbor), "port")
+            switch = self._get_field_from_node(node, "dpid")
+            totalbw += self._controller.call(method="report_port", params=[True, False, switch, port])[3] #Rx - link max
+        totalbw += background
+        return (totalbw, households)
 
-    def _lookup_server(self):
-        return self.config["servers"][0]
+    def _fetch_second_tier_stats(self, switch, dpid=True):
+        clients = []
+        totalbw = 0
+        if dpid:
+            node = self._find_node_from_label("dpid", switch)
+        else:
+            node = switch
+        neighbors = self._classify_neighbors(node)
+        for foreground in neighbors["foreground"]:
+            clients.append(self._fetch_foreground(node, foreground, switch))
+        totalbw, background = self._fetch_switch(node, neighbors["switch"][0], neighbors["background"], switch)
+        return (totalbw, clients, background)
 
-    def _fetch_parameters(self, switch, tier):
-        uplink =  self._find_uplink_port(switch)
-        totalbw = self._available_bandwidth(tier, switch, uplink)
-        if tier == "second":
-            clients = self._calculate_clients(switch, uplink, tier)
-            return totalbw, clients
-        elif tier == "first":
-            households = self._calculate_households(switch, uplink, tier)
-            return totalbw, households
+    def _classify_neighbors(self, node):
+        neighbors = {}
+        for neighbor in self._graph.neighbors(node):
+            _type = self._get_field_from_node(neighbor, "type")
+            if not neighbors.has_key(_type):
+                neighbors[_type] = []
+            neighbors[_type].append(neighbor)
+        return neighbors
+
+    def _fetch_foreground(self, node, neighbor, switch):
+        """Assume no background traffic from a foreground node."""
+        port = self._get_field_from_edge((node, neighbor), "port")
+        available_bandwidth = self._controller.call(method="report_port", params=[True, False, switch, port])[1] #Tx - link max - no background to remove
+        resolution = self._get_field_from_node(neighbor, "resolution")
+        return ((neighbor, available_bandwidth, resolution))
+
+    def _fetch_switch(self, node, neighbor, background, switch):
+        background_traffic = 0
+        port = self._get_field_from_edge((node, neighbor), "port")
+        max_bandwidth = self._controller.call(method="report_port", params=[True, False, switch, port])[3] #Rx - link max
+        for client in background:
+            port = self._get_field_from_edge((node, client), "port")
+            background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[1] #Tx - current background
+        available_bandwidth = max_bandwidth - background_traffic
+        assert available_bandwidth > 0
+        return available_bandwidth, background_traffic
+
+    def _find_node_from_label(self, field, value):
+        for node in self._graph.nodes():
+            if self._get_field_from_node(node, field) == value:
+                return node
 
     def _fix_household_result(self, switch, result):
         """Map index in result to household ID. Fixed mapping (see object variables)."""
         limits = []
         for index, limit in enumerate(result):
             household_id = self._first_tier_result_mapping[index]
-            port = self._find_port_from_household_id(switch, household_id)
+            neighbor = self._find_node_from_label("household", household_id)
+            node = self._find_node_from_label("dpid", switch)
+            port = self._get_field_from_edge((node, neighbor), "port")
             limits.append({'household_id' : household_id, 'port' : port, 'limit' : limit})
         return limits
-
-    def _find_port_from_household_id(self, switch, household_id_to_find):
-        for port, household_id in self._combined_switches[switch]["household_id"].iteritems():
-            if household_id == household_id_to_find:
-                return port
-
-    def _calculate_clients(self, switch, uplink, tier):
-        clients = []
-        for client_id, details in self.config["clients"]["foreground"].iteritems():
-            if details["switch"] == switch:
-                available_bw = self._available_bandwidth(tier, switch, details["port"])
-                clients.append((client_id, available_bw, details["resolution"]))
-        return clients
-
-
-    def _calculate_households(self, switch, uplink, tier):
-        households = []
-        for port in self._switch_ports[switch]:
-            if port != uplink:
-                household_id = self._combined_switches[switch]["household_id"][port]
-                available_bw = self._available_bandwidth(tier, switch, port)
-                households.append((household_id, available_bw))
-        return households
-
-    def _compare_switch_ports(self, tier, switch, switch_ports_result):
-        for port, throughput in self._switch_ports[switch].iteritems():
-            try:
-                self._update_max_throughput(switch, port, 'upload', switch_ports_result[port][2])
-                self._update_max_throughput(switch, port, 'download', switch_ports_result[port][3])
-                self._calculate_difference(switch_ports_result[port][2], throughput["upload"])
-                self._calculate_difference(switch_ports_result[port][3], throughput["download"])
-            except KeyError as key:
-                logging.warning('[integration][comparison] Port not found in result: %s', key)
-            except self.ChangeNotification as change:
-                logging.debug('[integration][comparison] %s', change)
-                return True
-
-    def _calculate_difference(self, result, throughput):
-        difference = result - throughput #download B/s
-        if abs(difference) >= self._threshold:
-            raise self.ChangeNotification("Threshold exceeded by " + str(abs(difference)) + "!")
-
-    def _update_max_throughput(self, switch, port, field, value):
-        if self._max_throughput[switch][port][field] < value:
-            self._max_throughput[switch][port][field] = value
-
-    def _poll(self, poll, tiers):
-        threading.Timer(poll, self._poll, [poll, tiers]).start()
-        for tier in tiers:
-            self._fetch_stats(tier)
-
-    class ChangeNotification(Exception):
-        pass
 
     class Controller(object):
 
