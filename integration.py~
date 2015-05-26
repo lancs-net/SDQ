@@ -112,9 +112,8 @@ class Integration(object):
     def _recalculate_first_tier(self, _):
         totalbw, households = self._fetch_first_tier_stats()
 	result = self._experience.first(totalbw=totalbw, households=households)
-        switch = self._get_field_from_node(self.first[0], "dpid")
-	result = self._fix_household_result(switch, result)
-        self._effect_first_tier_change(switch, result)
+        result = self._fix_household_result(self.first[0], result)
+        self._effect_first_tier_change(self.first[0], result)
 
     def _recalculate_second_tier(self, switch):
         totalbw, clients, _ = self._fetch_second_tier_stats(switch)
@@ -151,19 +150,16 @@ class Integration(object):
 	node = self.first[0]
         neighbors = self._graph.neighbors(node)
         for second in self.second:
-            print 'node', second
-	    household_available, _, household_background = self._fetch_second_tier_stats(second, dpid=False)
+            household_available, _, household_background = self._fetch_second_tier_stats(second, dpid=False)
             background += household_background
-            print 'back', household_background
-	    print 'avail', household_available
-	    id_ = self._get_field_from_node(second, "household")
+            id_ = self._get_field_from_node(second, "household")
             households.append((id_, household_available))
-        for neighbor in list(set(neighbors)-set(self.second)): #probably only one
+        for neighbor in list(set(neighbors)-set(self.second)):
             port = self._get_field_from_edge((node, neighbor), "port")
             switch = self._get_field_from_node(node, "dpid")
             totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
 	totalbw = self._convert_bits_to_kilobits(totalbw)
-        totalbw = totalbw - background
+        totalbw += background
         return (totalbw, households)
 
     def _fetch_second_tier_stats(self, switch, dpid=True):
@@ -173,7 +169,7 @@ class Integration(object):
             node = self._find_node_from_label("dpid", switch)
         else:
             node = switch
-	neighbors = self._classify_neighbors(node)
+        neighbors = self._classify_neighbors(node)
         for foreground in neighbors["foreground"]:
             clients.append(self._fetch_foreground(node, foreground))
         totalbw, background = self._fetch_switch(node, neighbors["switch"][0], neighbors["background"])
@@ -211,8 +207,8 @@ class Integration(object):
         max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
         for client in background:
             port = self._get_field_from_edge((node, client), "port")
-	    background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
-	available_bandwidth = max_bandwidth - background_traffic
+            background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[3] #Tx - current background
+        available_bandwidth = max_bandwidth - background_traffic
 	available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
 	background_traffic = self._convert_bits_to_kilobits(background_traffic)
 	assert available_bandwidth >= 0
@@ -260,6 +256,7 @@ class Integration(object):
 		try:
                     result = self._client.call(kwargs['method'], *kwargs['params'])
             	except pyjsonrpc.rpcerror.InternalError:
+		    print kwargs
                     result = self._client.notify(kwargs['method'], *kwargs['params'])
 		    result = None
 	    logging.debug('[controller][result]: %s', result)
