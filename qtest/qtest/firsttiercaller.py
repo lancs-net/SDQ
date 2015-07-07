@@ -43,10 +43,10 @@ class FirstTier(object):
     adjustedhhuf={}
 
     def call(self, totalbw, households):
-        linkcap={}
+        self.linkcap={}
         for household in households:
-            linkcap[household[0]] = household[1]
-        self.adjusthhuf(linkcap)
+            self.linkcap[household[0]] = household[1]
+        self.adjusthhuf(self.linkcap)
         share=self.getoptimalpoints(totalbw)
         return share
 
@@ -63,8 +63,10 @@ class FirstTier(object):
         variableset=[]
         startingpointset=[]
         flag=0
-        for h in ['A','B','C','D','E']: #Making sure they are in the correct order to match nsolve results
-            ufset[h]=self.adjustedhhuf[h].subs(self.x,Symbol('x'+str(h)))
+	linkcaplist = []
+	for h in ['A','B','C','D','E']: #Making sure they are in the correct order to match nsolve results
+            linkcaplist.append(self.linkcap[h])
+	    ufset[h]=self.adjustedhhuf[h].subs(self.x,Symbol('x'+str(h)))
             variableset.append(Symbol('x'+str(h)))
             startingpointset.append(int(totalbw)/len(self.hh))
             if flag==1:
@@ -79,8 +81,11 @@ class FirstTier(object):
         functionset.append(z)
         result=nsolve(functionset, variableset,startingpointset)
         toreturn=[]
+	i = 0
         for r in result:
-            toreturn.append(int(r))
+	    rmin=min(int(r), int(linkcaplist[i]))
+            toreturn.append(int(rmin))
+	    i += 1
         return toreturn
 
     def randomlinkcap():

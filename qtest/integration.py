@@ -13,7 +13,7 @@ from optparse import OptionParser
 
 class Integration(object):
 
-    _testing = False
+    _testing = False #Change to true to include randomly generated test data instead of a real response
     first = []
     second = []
     limits = []
@@ -30,17 +30,20 @@ class Integration(object):
         self._poll(float(poll))
 
     def _load_graph(self, path):
+        '''Load the JSON from a file.'''
         with open(path) as json_data:
             graph = json.load(json_data)
             json_data.close()
         return graph
 
     def _parse_graph(self, graph):
+        '''Parse the JSON into a graph representation.'''
         self._graph = digraph()
         self._parse_nodes(graph)
         self._parse_edges(graph)
 
     def _parse_nodes(self, tree):
+        '''Parse the nodes from JSON file into objects.'''
         for _type, node in tree["nodes"].iteritems():
             for _id, attrs in node.iteritems():
                 attrs["type"] = _type
@@ -52,35 +55,45 @@ class Integration(object):
                     pass
 
     def _parse_edges(self, tree):
+        '''Parse the edge of the graph.'''
         for _id, attrs in tree["edges"].iteritems():
             self._graph.add_edge(edge=tuple(attrs["items"]), wt=1, label=_id, attrs=attrs.items())
             if "limit" in attrs.keys():
                 self.limits.append(tuple(attrs["items"]))
 
-    def _initialise_switch_ports(self):
-        for edge in self.limits:
-            attrs = dict(self._graph.edge_attributes(edge))
-            switch = self._get_field_from_node(attrs["items"][0], "dpid")
-            self._controller.call(method="enforce_port_outbound", params=[switch, attrs["port"], attrs["limit"]])
+    # def _initialise_switch_ports(self):
+    #     '''For each of the edges, clear the current meters.'''
+    #     for edge in self.limits:
+    #         attrs = dict(self._graph.edge_attributes(edge))
+    #         switch = self._get_field_from_node(attrs["items"][0], "dpid")
+    #         self._controller.call(method="enforce_port_outbound", params=[switch, attrs["port"], attrs["limit"]])
 
     def _poll(self, poll):
+        '''At a regular interval, poll each tier for their metrics.'''
         threading.Timer(poll, self._poll, [poll]).start()
         for tier in self.tiers:
             self._fetch_stats(tier)
 
     def _get_field_from_node(self, node, field):
+        '''For a given node, retrieve a specific field value.'''
         try:
             return dict(self._graph.node_attributes(node))[str(field)]
         except KeyError:
             return {}
 
     def _get_field_from_edge(self, edge, field):
+        '''For a given field, retrieve a specific field value.'''
         try:
             return dict(self._graph.edge_attributes(edge))[str(field)]
         except KeyError:
             return {}
 
     def _fetch_stats(self, tier):
+        '''
+        For a set of given nodes, retrieve the statistics from the OpenFlow controller.
+
+        Check if a change has occured. If so, recalculate the QoE fairness.
+        '''
         nodes = getattr(self, tier)
         for node in nodes:
             switch = self._get_field_from_node(node, "dpid")
@@ -89,11 +102,12 @@ class Integration(object):
                  self._recalculate(tier, switch)
 
     def _compare_switch_ports(self, tier, switch, result):
+        '''Check if a statistic has changed drastically in the result.'''
         if switch not in self._switch_port_results.keys():
             self._switch_port_results[switch] = {}
         for port, throughput in result.iteritems():
             if port not in self._switch_port_results[switch].keys():
-                self._switch_port_results[switch][port] = throughput[2] #Should be tx?
+                self._switch_port_results[switch][port] = throughput[2]
                 continue
             else:
                 current = throughput[1]
@@ -102,68 +116,89 @@ class Integration(object):
             return self._calculate_difference(current, previous)
 
     def _calculate_difference(self, current, previous):
+        '''Calculate the difference between the current and previous values.'''
         difference = current - previous #download B/s
         if abs(difference) >= self._threshold:
             return True
 
     def _recalculate(self, tier, switch):
+        '''Call the correct recalculation function given the tier.'''
         getattr(self, '_recalculate_' + tier + '_tier')(switch)
 
     def _recalculate_first_tier(self, _):
+        '''Recalculate the metrics for the first tier.'''
         totalbw, households = self._fetch_first_tier_stats()
-	result = self._experience.first(totalbw=totalbw, households=households)
-        result = self._fix_household_result(self.first[0], result)
-        self._effect_first_tier_change(self.first[0], result)
+        result = self._experience.first(totalbw=totalbw, households=households)
+        switch = self._get_field_from_node(self.first[0], "dpid")
+        result = self._fix_household_result(switch, result)
+        self._effect_first_tier_change(switch, result)
 
     def _recalculate_second_tier(self, switch):
+        '''Recalculate the metrics for the second tier.'''
         totalbw, clients, _ = self._fetch_second_tier_stats(switch)
         result = self._experience.second(totalbw=totalbw, clients=clients)
         self._effect_second_tier_change(switch, result)
         self._update_forgiveness_effect(result)
 
     def _update_forgiveness_effect(self, result):
+        '''If a change has been made to the meters, update the forgiveness effect in the QoE function.'''
         timestamp = calendar.timegm(time.gmtime())
         for client_id, allocation in result.iteritems():
             self._experience.forgiveness_effect(client=client_id, timestamp=timestamp, bitrate=allocation[3])
 
     def _effect_second_tier_change(self, switch, result):
+        '''Install a service meter in the second tier.'''
         for id_, allocation in result.iteritems():
             limit = allocation[3]
             limit = self._convert_kilobits_to_bits(limit)
-            node = self._find_node_from_label("dpid", switch)
-            port = self._get_field_from_edge((node, id_), "port")
-            self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
+	    src = '192.168.1.235'
+	    ip = [self._get_field_from_node(id_, 'ip')]
+	    self._controller.call(method="enforce_service", params=[str(switch), src, ip, limit])
 
     def _effect_first_tier_change(self, switch, result):
+        '''Install a service meter in the first tier.'''
         for household in result:
             neighbor = self._find_node_from_label("household", household["household_id"])
-            node = self._find_node_from_label("dpid", switch)
-            port = self._get_field_from_edge((node, neighbor), "port")
-            limit = household["limit"]
-            limit = self._convert_kilobits_to_bits(limit)
-            self._controller.call(method="enforce_port_outbound", params=[switch, port, limit])
+        src = '192.168.1.235'
+        limit = household["limit"]
+        limit = self._convert_kilobits_to_bits(limit)
+        dsts = self._fetch_ips_from_household(neighbor)
+        self._controller.call(method="enforce_service", params=[str(switch), src, dsts, limit])
+
+    def _fetch_ips_from_household(self, node):
+        '''Fetch a the IPs of the hosts within a given household.'''
+        ips = []
+        neighbors = self._graph.neighbors(node)
+        for neighbor in neighbors:
+        	ip = self._get_field_from_node(neighbor, 'ip')
+        	if ip:
+        		ips.append(ip)
+        return ips
 
     def _fetch_first_tier_stats(self):
+        '''Fetch the statistics from each of the switches attached to the aggregation (first tier) switch.'''
         households = []
         totalbw = 0
         background = 0
-	node = self.first[0]
-        neighbors = self._graph.neighbors(node)
+        # node = self.first[0]
+        # neighbors = self._graph.neighbors(node)
         for second in self.second:
             household_available, _, household_background = self._fetch_second_tier_stats(second, dpid=False)
             background += household_background
             id_ = self._get_field_from_node(second, "household")
             households.append((id_, household_available))
-        for neighbor in list(set(neighbors)-set(self.second)):
-            port = self._get_field_from_edge((node, neighbor), "port")
-            switch = self._get_field_from_node(node, "dpid")
-            totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-	totalbw = self._convert_bits_to_kilobits(totalbw)
-        totalbw += background
+        # for neighbor in list(set(neighbors)-set(self.second)): #probably only one
+        #     port = self._get_field_from_edge((node, neighbor), "port")
+        #     switch = self._get_field_from_node(node, "dpid")
+        #     totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
+        totalbw = 100000 #TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
+        totalbw = self._convert_bits_to_kilobits(totalbw)
+        totalbw = totalbw - background
         return (totalbw, households)
 
     def _fetch_second_tier_stats(self, switch, dpid=True):
-	clients = []
+        '''Fetch the statistics from each of the hosts attached to a switch.'''
+        clients = []
         totalbw = 0
         if dpid:
             node = self._find_node_from_label("dpid", switch)
@@ -176,6 +211,7 @@ class Integration(object):
         return (totalbw, clients, background)
 
     def _classify_neighbors(self, node):
+        '''Classify the neighbours into foreground and background hosts.'''
         neighbors = {}
         for neighbor in self._graph.neighbors(node):
             _type = self._get_field_from_node(neighbor, "type")
@@ -185,42 +221,53 @@ class Integration(object):
         return neighbors
 
     def _fetch_foreground(self, node, neighbor):
-        """Assume no background traffic from a foreground node."""
+        '''
+        Fetch the foreground traffic for a node.
+
+        Assumes no background traffic.
+        '''
         port = self._get_field_from_edge((node, neighbor), "port")
-	switch = self._get_field_from_node(node, "dpid")        
-	result = self._controller.call(method="report_port", params=[False, True, switch, port])
-	available_bandwidth = result[2] #Tx - link max - no background to remove
-	available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
-	resolution = self._get_field_from_node(neighbor, "resolution")
+    	switch = self._get_field_from_node(node, "dpid")
+    	result = self._controller.call(method="report_port", params=[False, True, switch, port])
+    	available_bandwidth = result[2] #Tx - link max - no background to remove
+    	available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
+    	resolution = self._get_field_from_node(neighbor, "resolution")
         return ((neighbor, available_bandwidth, resolution))
 
     def _convert_bits_to_kilobits(self, value):
-	return value/1000
+        '''Convert bits to kilobits.'''
+        return value/1000 #TODO: This is a conversion that works, but not correct for bits to kilobits.
 
     def _convert_kilobits_to_bits(self, value):
-	return value * 10
+        '''Convert kilobits to bits.'''
+        return value * 2 #TODO: This is a conversion that works, but not correct for kilobits to bits.
 
     def _fetch_switch(self, node, neighbor, background):
+        '''Fetch the background traffic and available bandwidth for a given switch.'''
         background_traffic = 0
         switch = self._get_field_from_node(node, "dpid")
-	port = self._get_field_from_edge((node, neighbor), "port")
-        max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
+        port = self._get_field_from_edge((node, neighbor), "port")
+        #max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
+        max_bandwidth = 20000 #TODO: Hard-coded according to experimental parameters
         for client in background:
             port = self._get_field_from_edge((node, client), "port")
-            background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[3] #Tx - current background
+        background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
+        background_traffic = self._convert_bits_to_kilobits(background_traffic)
         available_bandwidth = max_bandwidth - background_traffic
-	available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
-	background_traffic = self._convert_bits_to_kilobits(background_traffic)
-	assert available_bandwidth >= 0
+        try:
+            assert available_bandwidth >= 0
+        except AssertionError:
+            print available_bandwidth, max_bandwidth, background_traffic
         return available_bandwidth, background_traffic
 
     def _find_node_from_label(self, field, value):
+        '''Find a node from a given label.'''
         for node in self._graph.nodes():
             if self._get_field_from_node(node, field) == value:
                 return node
 
     def _fix_household_result(self, switch, result):
-        """Map index in result to household ID. Fixed mapping (see object variables)."""
+        '''Map index in result to household ID. Fixed mapping (see object variables).'''
         limits = []
         for index, limit in enumerate(result):
             household_id = self._first_tier_result_mapping[index]
@@ -231,12 +278,15 @@ class Integration(object):
         return limits
 
     class Controller(object):
+        '''Represents all communication with the controller.'''
 
         def __init__(self, host, port, testing):
+            '''Connect to the controller.'''
             self._testing = testing
             self._client = pyjsonrpc.HttpClient(url = "http://" + host + ":" + port + "/jsonrpc")
 
         def call(self, **kwargs):
+            '''Make a call to the controller.'''
             result = None
             logging.debug('[controller][call]: %s', kwargs)
             if self._testing:
@@ -253,18 +303,17 @@ class Integration(object):
                 elif kwargs['method'] == "report_port":
                     result = self._generate_random_bandwidth(4)
             else:
-		try:
+                try:
                     result = self._client.call(kwargs['method'], *kwargs['params'])
-            	except pyjsonrpc.rpcerror.InternalError:
-		    print kwargs
-                    result = self._client.notify(kwargs['method'], *kwargs['params'])
-		    result = None
-	    logging.debug('[controller][result]: %s', result)
-#	    print kwargs
-#	    print result
-            return result
+                except pyjsonrpc.rpcerror.InternalError as e:
+                    print e, kwargs
+                result = self._client.notify(kwargs['method'], *kwargs['params'])
+                result = None
+                logging.debug('[controller][result]: %s', result)
+                return result
 
         def _generate_random_bandwidth(self, length):
+            '''Generate a random bandwidth for testing purposes.'''
             _max = 20000000
             _min = 300000
             bandwidth = []
@@ -273,24 +322,29 @@ class Integration(object):
             return bandwidth
 
     class Experience(object):
+        '''Represents all communication with the QoE code.'''
 
         def __init__(self):
+            '''Initialise the two tier objects.'''
             self.first_tier = firsttiercaller.FirstTier()
             self.second_tier = secondtiercaller.SecondTier()
 
         def first(self, **kwargs):
+            '''Make a call to the first tier code.'''
             logging.debug('[experience][first][call]: %s', kwargs)
             result = self.first_tier.call(**kwargs)
             logging.debug('[experience][first][result]: %s', result)
             return result
 
         def second(self, **kwargs):
+            '''Make a call to the second tier code.'''
             logging.debug('[experience][second]: %s', kwargs)
             result = self.second_tier.call(**kwargs)
             logging.debug('[experience][second][result]: %s', result)
             return result
 
         def forgiveness_effect(self, **kwargs):
+            '''Update the forgiveness effect. Only present in the second tier.'''
             logging.debug('[experience][forgiveness]: %s', kwargs)
             self.second_tier.set_session_index(**kwargs)
 

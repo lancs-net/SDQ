@@ -66,7 +66,7 @@ class SecondTier(object):
 
     def call(self, totalbw, clients):
         self.output={}
-        self.ext = 0
+        self.ext = 1
         # for client in clients:
         clients = dict(enumerate(clients))
         # while i<len(clients):

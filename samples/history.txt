@@ -1,0 +1,1000 @@
+   13  sudo pip install ryu
+   14  ls -l
+   15  git clone https://github.com/hdb3/openflow_bandwidth.git
+   16  sudo apt-get install git
+   17  git clone https://github.com/hdb3/openflow_bandwidth.git
+   18  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   19  pip install stevedore
+   20  sudo pip install stevedore
+   21  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   22  pip install greenlet
+   23  sudo pip install greenlet
+   24  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   25  sudo pip install pysjsonrpc
+   26  sudo sudo pip install pysjsonrpc
+   27  sudo sudo pip install pip install python-jsonrp
+   28  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   29  sudo pip install python-jsonrpc
+   30  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   31  nano openflow_bandwidth/bandwidth_control_simple_switch_13.py -c
+   32  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   33  ping 192.168.1.201
+   34  ping 192.168.1.235
+   35  apt-get install clusterssh
+   36  sudo apt-get install clusterssh
+   37  sudo nano /etc/clusters
+   38  clusterssh all
+   39  ls -l
+   40  nano .ssh/id_rsa.pem
+   41  ssh 192.168.1.235
+   42  ssh ubuntu@192.168.1.235
+   43  ssh ubuntu@192.168.1.201
+   44  ls -l .ssh/
+   45  ssh ubuntu@192.168.1.201 -v
+   46  rm -rf .ssh/known_hosts 
+   47  mv .ssh/id_rsa.pem .ssh/id_rsa
+   48  ssh ubuntu@192.168.1.201 -v
+   49  chmod 0644 .ssh/id_rsa 
+   50  ssh ubuntu@192.168.1.201 -v
+   51  chmod 700 .ssh/id_rsa 
+   52  ssh ubuntu@192.168.1.201 -v
+   53  clusterssh all
+   54  exit
+   55  clusterssh all
+   56  exit
+   57  clusterssh all
+   58  exit
+   59  clusterssh all
+   60  exit
+   61  clusterssh all
+   62  exit
+   63  clusterssh all
+   64  exit
+   65  clusterssh all
+   66  exit
+   67  clusterssh all
+   68  exit
+   69  clusterssh all
+   70  exit
+   71  clusterssh all
+   72  exit
+   73  clusterssh all
+   74  exit
+   75  clusterssh all
+   76  exit
+   77  clusterssh all
+   78  exit
+   79  ssh ubuntu@192.168.1.235 -v
+   80  ping 192.168.1.235
+   81  ssh ubuntu@192.168.1.235 -v
+   82  clusterssh all
+   83  clusterssh hosts360
+   84  clusterssh hosts720
+   85  clusterssh hosts1080
+   86  exit
+   87  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   88  killall python
+   89  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+   90  clusterssh hosts1080
+   91  clusterssh hosts720
+   92  clusterssh all
+   93  clusterssh all -h
+   94  clusterssh all -o "-x -o ConnectTimeout=10" -a './pre.sh'
+   95  ssh 192.168.1.234
+   96  ssh 192.168.1.235
+   97  ssh 192.168.1.235 -h
+   98  clusterssh all -o "-x -o ConnectTimeout=10" -a './pre.sh'
+   99  ssh 192.168.1.234
+  100  ssh 192.168.1.235 
+  101  ssh 192.168.1.235  -v
+  102  clusterssh all -o "-x -o ConnectTimeout=10"
+  103  clusterssh all -o "-x -o ConnectTimeout=30"
+  104  clusterssh hosts720
+  105  clusterssh all -o "-x -o ConnectTimeout=30"
+  106  exit
+  107  clusterssh all -o "-x -o ConnectTimeout=30"
+  108  clusterssh hosts720
+  109  exit
+  110  clusterssh hosts720
+  111  rm -rf .ssh/known_hosts 
+  112  clusterssh hosts720
+  113  exit
+  114  clusterssh hosts720
+  115  clusterssh hosts1080
+  116  clusterssh hosts360
+  117  exit
+  118  clusterssh hosts360
+  119  clusterssh foregroundHosts
+  120  cat /etc/clusters 
+  121  clusterssh hostsForeground
+  122  exit
+  123  clusterssh hostsForeground
+  124  clusterssh hostsBackground
+  125  exit
+  126  clusterssh hostsBackground
+  127  exot
+  128  exit
+  129  clusterssh hostsBackground
+  130  exit
+  131  clusterssh all
+  132  clusterssh hostsBackground
+  133  exit
+  134  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py 
+  135  clusterssh hostsBackground
+  136  cd qtest
+  137  ls -l
+  138  cd qtest/
+  139  ls -l
+  140  nano resourceallocationcaller.py
+  141  nano firsttiercaller.py
+  142  nano resourceallocationcaller.py
+  143  cd ..
+  144  python integration -i 30
+  145  python integration.py -i 30
+  146  cat debug.log 
+  147  nano qtest/resourceallocationcaller.py
+  148  python integration.py -i 30
+  149  ls -l
+  150  nano qtest/resourceallocationcaller.py
+  151  python integration.py -i 30
+  152  nano qtest/resourceallocationcaller.py
+  153  python integration.py -i 30
+  154  nano qtest/resourceallocationcaller.py
+  155  python integration.py -i 30
+  156  ls -l
+  157  cd qtest/
+  158  ls -l
+  159  cd ..
+  160  nano qtest/resourceallocationcaller.py
+  161  python integration.py -i 30
+  162  ls -l
+  163  nano qtest/resourceallocationcaller.py
+  164  python integration.py -i 30
+  165  ls -l
+  166  nano qtest/resourceallocationcaller.py
+  167  python integration.py -i 30
+  168  ls -l
+  169  nano qtest/resourceallocationcaller.py
+  170  python integration.py -i 30
+  171  ls -l
+  172  cat debug.log 
+  173  rm -rf debug.log 
+  174  python integration.py -i 30
+  175  cat debug.log 
+  176  nano qtest/resourceallocationcaller.py
+  177  rm -rf debug.log 
+  178  python integration.py -i 30
+  179  cat debug.log 
+  180  rm -rf debug.log 
+  181  nano qtest/resourceallocationcaller.py
+  182  python integration.py -i 30
+  183  cd ..
+  184  ls -l
+  185  nano pre.sh 
+  186  rm -rf pre.sh 
+  187  nano pre.sh
+  188  chmod +x pre.sh 
+  189  ./pre.sh 
+  190  nano pre.sh
+  191  ./pre.sh 
+  192  nano pre.sh
+  193  ./pre.sh 
+  194  tput
+  195  tput setaf1; echo test
+  196  tput setaf 1; echo test
+  197  tput setaf 1; echo test; tput setaf 0
+  198  tput setaf 1; echo test; tput sgr0 0
+  199  nano pre.sh 
+  200  ./pre.sh 
+  201  nano pre.sh 
+  202  ssh 192.168.1.235
+  203  iperf -h
+  204  sudo apt-get install iperf
+  205  iperf -h
+  206  cd qtest/
+  207  python integration.py -i 30
+  208  nano qtest/resourceallocationcaller.py
+  209  sudo nano /etc/clusters 
+  210  cd ..
+  211  echo $((RANDOM%200+100))
+  212  echo $((RANDOM%400000+2000000)
+  213  iperf -c 192.168.1.224 -u 2001814
+  214  iperf -c 192.168.1.224 -b 2001814
+  215  nano go.sh
+  216  chmod +x go.sh 
+  217  ./go.sh 
+  218  nano go.sh
+  219  ./go.sh 
+  220  nano go.sh
+  221  ./go.sh 
+  222  nano go.sh
+  223  ./go.sh 
+  224  nano go.sh
+  225  ./go.sh 
+  226  nano go.sh
+  227  ./go.sh 
+  228  nano go.sh
+  229  ./go.sh 
+  230  nano go.sh
+  231  ./go.sh 
+  232  nano go.sh
+  233  ./go.sh 
+  234  nano go.sh
+  235  ./go.sh 
+  236  nano go.sh
+  237  ./go.sh 
+  238  nano go.sh
+  239  ./go.sh 
+  240  nano go.sh
+  241  ./go.sh 
+  242  nano go.sh
+  243  ./go.sh 
+  244  nano go.sh
+  245  ./go.sh 
+  246  nano go.sh
+  247  ./go.sh 
+  248  nano go.sh
+  249  ./go.sh 
+  250  nano go.sh
+  251  ./go.sh 
+  252  nano go.sh
+  253  ./go.sh 
+  254  nano go.sh
+  255  ./go.sh 
+  256  nano go.sh
+  257  ./go.sh 
+  258  nano go.sh
+  259  ./go.sh 
+  260  nano go.sh
+  261  ./go.sh 
+  262  nano go.sh
+  263  ./go.sh 
+  264  nano go.sh
+  265  ./go.sh 
+  266  nano go.sh
+  267  ./go.sh 
+  268  nano go.sh
+  269  ./go.sh 
+  270  nano go.sh
+  271  ./go.sh 
+  272  nano go.sh
+  273  ./go.sh 
+  274  nano go.sh
+  275  ./go.sh 
+  276  nano go.sh
+  277  ./go.sh 
+  278  nano go.sh
+  279  ./go.sh 
+  280  nano go.sh
+  281  ./go.sh 
+  282  nano go.sh
+  283  ./go.sh 
+  284  nano go.sh
+  285  ./go.sh 
+  286  nano go.sh
+  287  ./go.sh 
+  288  nano go.sh
+  289  ./go.sh 
+  290  ssh 192.168.1.234
+  291  ssh 192.168.1.235
+  292  cd qtest/
+  293  python integration.py -i 30
+  294  ls -l
+  295  cat debug.log 
+  296  cat debug.log | grep "experience"
+  297  ifconfig
+  298  cd ..
+  299  wget http://downloads.es.net/pub/iperf/iperf-3-current.tar.gz
+  300  tar -xvf iperf-3-current.tar.gz 
+  301  ls -l
+  302  cd iperf-3.0.11/
+  303  ./configure; make; make install
+  304  sudo ./configure; make; make install
+  305  sudo ./configure; sudo make; sudo make install
+  306  iperf3 
+  307  ./configure; make; make install
+  308  rm -rf /usr/local/lib/libiperf.so.0.0.0
+  309  sudo rm -rf /usr/local/lib/libiperf.so.0.0.0
+  310  ./configure; make; make install
+  311  ./configure; sudo make; make install
+  312  ./configure; sudo make; sudo make install
+  313  iperf3 
+  314  iperf3  -c
+  315  ./configure; make; sudo make install
+  316  iperf3
+  317  ./bootstrap.sh 
+  318  sudo apt-get install libtoolize
+  319  ./bootstrap.sh 
+  320  ./configure
+  321  make
+  322  sudo make install
+  323  iperf3 -h
+  324  ldcondif
+  325  ldconfig
+  326  sudo ldconfig
+  327  iperf3 -h
+  328  cd ..
+  329  ls -l
+  330  ssh 192.168.1.234
+  331  cd qtest/
+  332  clusterssh hostsBackground
+  333  exit
+  334  clusterssh hostsBackground
+  335  curl
+  336  curl  --limit-rate 
+  337  clusterssh hostsBackground
+  338  nano go.sh 
+  339  ./go.sh 
+  340  nano go.sh 
+  341  ./go.sh 
+  342  nano go.sh 
+  343  ./go.sh 
+  344  nano go.sh 
+  345  ./go.sh 
+  346  clusterssh hostsBackground
+  347  exit
+  348  clusterssh hostsBackground
+  349  exit
+  350  ssh 192.168.1.234
+  351  clusterssh hostsBackground
+  352  clusterssh all
+  353  tcpdump
+  354  ifconfig
+  355  tcpdump eth1
+  356  tcpdump -i eth1
+  357  sudo tcpdump -i eth1
+  358  cd qtest/
+  359  rm -rf debug.log 
+  360  nano qtest/resourceallocationcaller.py
+  361  python integration.py -i 30
+  362  cat debug.log 
+  363  nano qtest/resourceallocationcaller.py
+  364  rm -rf debug.log 
+  365  python integration.py -i 30
+  366  cd ..
+  367  cd openflow_bandwidth/
+  368  ls -l
+  369  python enforce_throughput_port.py 1834211266922944 22 1000
+  370  python enforce_throughput_port.py 1834211266922944 22 10000
+  371  python enforce_throughput_port.py 1834211266922944 22 20000
+  372  python enforce_throughput_port.py 1834211266922944 22 10000
+  373  python enforce_throughput_port.py 1834211266922944 22 1000
+  374  python enforce_throughput_port.py 1834211266922944 22 200
+  375  python enforce_throughput_port.py 1834211266922944 22 20
+  376  python enforce_throughput_port.py 1834211266922944 22 30
+  377  python enforce_throughput_port.py 1834211266922944 22 50
+  378  python enforce_throughput_port.py 1834211266922944 22 100
+  379  python enforce_throughput_port.py 1834211266922944 22 110
+  380  python enforce_throughput_port.py 1834211266922944 22 120
+  381  python enforce_throughput_port.py 1834211266922944 22 150
+  382  python enforce_throughput_port.py 1834211266922944 22 130
+  383  python enforce_throughput_port.py 1834211266922944 22 120
+  384  python enforce_throughput_port.py 1834211266922944 22 200
+  385  python enforce_throughput_port.py 1834211266922944 22 100000
+  386  python enforce_throughput_port.py 1834211266922944 22 100
+  387  python enforce_throughput_port.py 708311360080320 11 2000
+  388  python enforce_throughput_port.py 708311360080320 11 20000
+  389  python enforce_throughput_port.py 708311360080320 11 20
+  390  python enforce_throughput_port.py 708311360080320 11 200
+  391  python enforce_throughput_port.py 708311360080320 11 100
+  392  python enforce_throughput_port.py 708311360080320 11 150
+  393  python enforce_throughput_port.py 708311360080320 11 200
+  394  ssh 192.168.1.205
+  395  ping 192.168.1.205
+  396  ping 192.168.1.206
+  397  ping 192.168.1.209
+  398  ping 192.168.1.212
+  399  ping 192.168.1.201
+  400  ifconfig
+  401  dhclient eth1
+  402  sudo dhclient eth1
+  403  ifconfig
+  404  ping 192.168.1.201
+  405  ssh 192.168.1.205
+  406  ping 192.168.1.205
+  407  ssh 192.168.1.205
+  408  clusterssh all
+  409  exit
+  410  clusterssh all
+  411  clusterssh hostsBackground
+  412  ping 192.168.1.235
+  413  ping 192.168.1.234
+  414  ifconfig
+  415  ping 192.168.1.234
+  416  clusterssh hostsBackground
+  417  exit
+  418  clusterssh hostsBackground
+  419  exit
+  420  nano qtest/
+  421  nano qtest/config.json 
+  422  python enforce_throughput_port.py 2115686243633600 26 1000
+  423  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 1000
+  424  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 10000
+  425  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 100000
+  426  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 10000
+  427  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 100000
+  428  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 10000
+  429  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 1000000
+  430  nano qtest/integration.py 
+  431  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 1000000
+  432  cd qtest/
+  433  nano config.json 
+  434  python openflow_bandwidth/enforce_throughput_port.py 2115686243633600 26 1000000
+  435  nano config.json 
+  436  nano integration.py 
+  437  nano config.json 
+  438  nano integration.py 
+  439  nano config.json 
+  440  nano integration.py 
+  441  nano config.json 
+  442  nano integration.py 
+  443  python integration.py 
+  444  nano integration.py 
+  445  python integration.py 
+  446  nano integration.py 
+  447  python integration.py 
+  448  nano integration.py 
+  449  python integration.py 
+  450  nano integration.py 
+  451  python integration.py 
+  452  nano integration.py 
+  453  python integration.py 
+  454  nano integration.py 
+  455  nano config.json 
+  456  python integration.py 
+  457  nano config.json 
+  458  python integration.py 
+  459  nano integration.py 
+  460  python integration.py 
+  461  nano integration.py 
+  462  python integration.py 
+  463  nano integration.py 
+  464  python integration.py 
+  465  nano integration.py 
+  466  python integration.py 
+  467  nano integration.py 
+  468  python integration.py 
+  469  nano integration.py 
+  470  python integration.py 
+  471  nano integration.py 
+  472  nano config.json 
+  473  python integration.py 
+  474  nano config.json 
+  475  nano integration.py 
+  476  python integration.py 
+  477  nano integration.py 
+  478  python integration.py 
+  479  nano integration.py 
+  480  python integration.py 
+  481  nano integration.py 
+  482  python integration.py 
+  483  nano qtest/resourceallocationcaller.py -c
+  484  python integration.py 
+  485  python integration.py -h
+  486  rm -rf debug.log 
+  487  python integration.py -i 30
+  488  cat debug.log | grep mu
+  489  cat debug.log | grep controller
+  490  cat debug.log | grep experience
+  491  ssh 192.168.1.204
+  492  python integration.py -i 30
+  493  ssh 192.168.1.204
+  494  nano integration.py 
+  495  nano config.json 
+  496  python integration.py -i 30
+  497  ssh 192.168.1.204
+  498  ssh 192.168.1.222
+  499  ping 192.168.1.222
+  500  ssh 192.168.1.222
+  501  ssh 192.168.1.222 -v
+  502  ssh 192.168.1.224
+  503  ssh 192.168.1.223
+  504  cd qtest/
+  505  cd ..
+  506  cd openflow_bandwidth/
+  507  python enforce_throughput_port.py 2115686243633600 26 1000000000000000
+  508  python enforce_throughput_port.py 2115686243633600 28 1000000000000000
+  509  python enforce_throughput_port.py 2115686243633600 30 1000000000000000
+  510  python enforce_throughput_port.py 2115686243633600 32 1000000000000000
+  511  python enforce_throughput_port.py 2115686243633600 36 1000000000000000
+  512  python enforce_throughput_port.py 2115686243633600 34 1000000000000000
+  513  python enforce_throughput_port.py 2397161220344256 38 1000000000000000
+  514  python enforce_throughput_port.py 2397161220344256 38 1000000000000
+  515  python enforce_throughput_port.py 2115686243633600 34 1000000000000
+  516  python enforce_throughput_port.py 2115686243633600 32 1000000000000
+  517  python enforce_throughput_port.py 2115686243633600 28 1000000000000
+  518  python enforce_throughput_port.py 2115686243633600 26 1000000000000
+  519  python enforce_throughput_port.py 2397161220344256 38 10000000
+  520  python enforce_throughput_port.py 2397161220344256 38 1000
+  521  python enforce_throughput_port.py 2397161220344256 38 100000
+  522  python enforce_throughput_port.py 2115686243633600 26 100000
+  523  python enforce_throughput_port.py 2115686243633600 26 10000
+  524  python enforce_throughput_port.py 2115686243633600 28 10000
+  525  python enforce_throughput_port.py 2115686243633600 30 10000
+  526  python enforce_throughput_port.py 2115686243633600 32 10000
+  527  python enforce_throughput_port.py 2115686243633600 26 10000
+  528  python enforce_throughput_port.py 2115686243633600 26 1000
+  529  python enforce_throughput_port.py 2115686243633600 26 2000
+  530  python enforce_throughput_port.py 2397161220344256 38 100
+  531  python enforce_throughput_port.py 2397161220344256 38 1000
+  532  python enforce_throughput_port.py 2397161220344256 38 10000
+  533  python enforce_throughput_port.py 2397161220344256 38 100000
+  534  python enforce_throughput_port.py 2397161220344256 38 200000
+  535  python enforce_throughput_port.py 2397161220344256 38 1000000
+  536  python enforce_throughput_port.py 2397161220344256 38 300000
+  537  python enforce_throughput_port.py 2397161220344256 38 200000
+  538  python enforce_throughput_port.py 2397161220344256 38 1000000000
+  539  python enforce_throughput_port.py 2397161220344256 34 300000
+  540  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  541  git clone git://github.com/osrg/ryu.git 
+  542  ryu-manager ryu/ryu/app/simple_switch_13.py 
+  543  ls -l
+  544  clusterssh all
+  545  exit
+  546  clusterssh all
+  547  exit
+  548  clusterssh all
+  549  exit
+  550  clusterssh all
+  551  exit
+  552  clusterssh all
+  553  exit
+  554  clusterssh all
+  555  ssh 192.168.1.201 -v
+  556  clusterssh all
+  557  ssh 192.168.1.211 -v
+  558  clusterssh all
+  559  exit
+  560  clusterssh all
+  561  exit
+  562  clusterssh all
+  563  exit
+  564  clusterssh all
+  565  exit
+  566  clusterssh all
+  567  cat /etc/clusters 
+  568  clusterssh all
+  569  exit
+  570  clusterssh all
+  571  exit
+  572  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  573  killall ryu
+  574  killall ryu-manager
+  575  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  576  top
+  577  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  578  killall controller
+  579  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  580  netstat -lntp
+  581  kill -9 5482
+  582  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  583  netstat -lntp
+  584  kill -9 6792
+  585  netstat -lntp
+  586  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  587  killall ryu-manager
+  588  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  589  netstat -lntp
+  590  kill -9 10201
+  591  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  592  cd qtest/
+  593  tail -f debug.log 
+  594  nano integration.py 
+  595  cd ..
+  596  cd openflow_bandwidth/
+  597  python enforce_throughput_port 2115686243633600 34 200000
+  598  python enforce_throughput_port.py 2115686243633600 34 200000
+  599  python enforce_throughput_port.py 2115686243633600 34 20000
+  600  python enforce_throughput_port.py 2115686243633600 32 20000
+  601  python enforce_throughput_port.py 2115686243633600 32 200000
+  602  tail -f debug.log 
+  603  cd ..
+  604  cd qtest/
+  605  tail -f debug.log 
+  606  cat debug.log | grep 'second'
+  607  cat debug.log | grep 'first'
+  608  cat debug.log | grep 'second'
+  609  tail -f debug.log 
+  610  cat debug.log | grep 'second'
+  611  cat debug.log | grep 'first'
+  612  cat debug.log | grep 'second'
+  613  cat debug.log | grep 'first'
+  614  tail -f debug.log 
+  615  cat debug.log | grep 'second'
+  616  rm -rf debug.log
+  617  tail -f debug.log 
+  618  touch debug.log
+  619  tail -f debug.log 
+  620  cat debug.log | grep 'second'
+  621  cat debug.log | grep 'first'
+  622  tail -f debug.log 
+  623  rm -rf debug.log
+  624  tail -f debug.log 
+  625  touch debug.log
+  626  tail -f debug.log 
+  627  cat debug.log | grep 'first'
+  628  cat debug.log | grep 'second'
+  629  cat debug.log | grep 'first'
+  630  tail -f debug.log 
+  631  rm -rf debug.log
+  632  tail -f debug.log 
+  633  touch debug.log
+  634  tail -f debug.log 
+  635  rm -rf debug.log
+  636  touch debug.log
+  637  tail -f debug.log 
+  638  top
+  639  kill integration.py
+  640  killall python
+  641  tail -f debug.log 
+  642  clusterssh all
+  643  cd qtest/
+  644  git pull
+  645  python integration.py -i 30
+  646  nano integration.py 
+  647  cd ..
+  648  git clone https://github.com/pmatiello/python-graph.git
+  649  cd python-graph/
+  650  make install-core
+  651  sudo make install-core
+  652  cd ..
+  653  cd qtest/
+  654  python integration.py -i 30
+  655  nano integration.py 
+  656  mv debug.log debug.log.bak
+  657  ls -l
+  658  python integration.py -i 30
+  659  nano integration.py 
+  660  python integration.py -i 30
+  661  nano integration.py 
+  662  python integration.py -i 30
+  663  nano integration.py 
+  664  python integration.py -i 30
+  665  nano integration.py 
+  666  python integration.py -i 30
+  667  nano integration.py 
+  668  python integration.py -i 30
+  669  nano integration.py -c 
+  670  python integration.py -i 30
+  671  nano integration.py 
+  672  python integration.py -i 30
+  673  ]
+  674  nano integration.py -c
+  675  python integration.py -i 30
+  676  nano integration.py -c 
+  677  python integration.py -i 30
+  678  nano integration.py -c 
+  679  python integration.py -i 30
+  680  nano integration.py -c 
+  681  cat debug.log
+  682  rm -rf debug.log
+  683  python integration.py -i 30
+  684  nano integration.py -c
+  685  python integration.py -i 30
+  686  nano integration.py -c
+  687  python integration.py -i 30
+  688  nano integration.py -c
+  689  python integration.py -i 30
+  690  nano integration.py -c
+  691  python integration.py -i 30
+  692  nano integration.py -c 
+  693  python integration.py -i 30
+  694  nano integration.py -c 
+  695  python integration.py -i 30
+  696  nano integration.py -c 
+  697  python integration.py -i 30
+  698  nano integration.py -c 
+  699  python integration.py -i 30
+  700  nano integration.py -c 
+  701  python integration.py -i 30
+  702  nano integration.py -c 
+  703  python integration.py -i 30
+  704  nano integration.py 
+  705  python integration.py -i 30
+  706  nano integration.py 
+  707  python integration.py -i 30
+  708  killall python
+  709  python integration.py -i 30
+  710  ping 192.168.1.201
+  711  ping 192.168.1.202
+  712  python integration.py -i 30
+  713  nano integration.py -c
+  714  python integration.py -i 30
+  715  nano integration.py -c
+  716  python integration.py -i 30
+  717  nano integration.py -c
+  718  python integration.py -i 30
+  719  nano integration.py -c
+  720  python integration.py -i 30
+  721  nano integration.py -c
+  722  python integration.py -i 30 -h
+  723  python integration.py -i 30 -t 10
+  724  nano integration.py -c
+  725  python integration.py -i 30 -t 10
+  726  nano integration.py -c
+  727  python integration.py -i 30 -t 10
+  728  nano integration.py -c
+  729  python integration.py -i 30 -t 10
+  730  nano integration.py -c
+  731  python integration.py -i 30 -t 10
+  732  nano integration.py -c
+  733  python integration.py -i 30 -t 10
+  734  killall python
+  735  rm -rf debug.log
+  736  python integration.py -i 30 -t 10
+  737  ping 192.168.1.201
+  738  python integration.py -i 30 -t 10
+  739  nano integration.py -c
+  740  python integration.py -i 30 -t 10
+  741  nano integration.py -c
+  742  python integration.py -i 30 -t 10
+  743  nano integration.py -c
+  744  python integration.py -i 30 -t 10
+  745  nano integration.py -c
+  746  python integration.py -i 30 -t 10
+  747  nano integration.py -c
+  748  python integration.py -i 30 -t 10
+  749  nano integration.py -c
+  750  python integration.py -i 30 -t 10
+  751  nano integration.py -c
+  752  python integration.py -i 30 -t 10
+  753  nano integration.py -c
+  754  python integration.py -i 30 -t 10
+  755  rm -rf debug.log
+  756  python integration.py -i 30 -t 10
+  757  nano integration.py -c
+  758  python integration.py -i 30 -t 10
+  759  nano integration.py -c
+  760  python integration.py -i 30 -t 10
+  761  nano integration.py
+  762  nano integration.py -c
+  763  python integration.py -i 30 -t 10
+  764  nano integration.py -c
+  765  python integration.py -i 30 -t 10
+  766  nano integration.py -c
+  767  python integration.py -i 30 -t 10
+  768  nano integration.py -c
+  769  python integration.py -i 30 -t 10
+  770  nano integration.py -c
+  771  python integration.py -i 30 -t 10
+  772  nano integration.py -c
+  773  python integration.py -i 30 -t 10
+  774  reboot
+  775  sudo reboot
+  776  python integration.py -i 30
+  777  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  778  cd qtest/
+  779  python integration.py -i 30 -t 10c
+  780  python integration.py -i 30 -t 10
+  781  git add .
+  782  git commit -m 'minor fixes'
+  783  git push
+  784  python integration.py -i 30 -t 10
+  785  cd qtest/
+  786  rm -rf debug.log
+  787  touch debug.log
+  788  tail -f debug.log
+  789  gem
+  790  sudo apt-get install rubygems
+  791  sudo apt-get install ruby
+  792  gem install gist
+  793  sudo gem install gist
+  794  gist debug.log
+  795  clusterssh all
+  796  ping 192.168.1.221
+  797  dhclient eth1
+  798  sudo dhclient eth1
+  799  ping 192.168.1.221
+  800  clusterssh all
+  801  exit
+  802  clusterssh all
+  803  exit
+  804  clusterssh all
+  805  nano /etc/cluste
+  806  clusterssh hostsForeground
+  807  exit
+  808  clusterssh hostsForeground
+  809  clusterssh all
+  810  exit
+  811  clusterssh all
+  812  exit
+  813  clusterssh all
+  814  exit
+  815  clusterssh all
+  816  exit
+  817  clusterssh all
+  818  cat /etc/clusters 
+  819  sudo nano /etc/clusters 
+  820  clusterssh hosts
+  821  exit
+  822  clusterssh hosts
+  823  clusterssh all
+  824  exit
+  825  clusterssh all
+  826  exit
+  827  clusterssh all
+  828  exit
+  829  clusterssh all
+  830  exit
+  831  clusterssh all
+  832  exit
+  833  clusterssh all
+  834  exit
+  835  clusterssh all
+  836  exit
+  837  clusterssh all
+  838  exit
+  839  clusterssh all
+  840  exit
+  841  ping 192.168.1.221
+  842  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  843  killall python
+  844  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  845  python integration.py -i 30
+  846  history | grep netstat
+  847  netstat -lntp
+  848  kill -9 5210
+  849  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  850  netstat -lntp
+  851  kill -9 6284
+  852  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  853  nano openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  854  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  855  netstat -lntp
+  856  kill -9 6466
+  857  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  858  nano openflow_bandwidth/rpc_server.py
+  859  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  860  kill -9 6466
+  861  netstat -lntp
+  862  kill -9 6742
+  863  kill -9 6743
+  864  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  865  nano openflow_bandwidth/rpc_server.py
+  866  nano openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  867  nano openflow_bandwidth/rpc_server.py
+  868  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  869  kill -9 6743
+  870  netstat -lntp
+  871  kill -9 6794
+  872  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  873  netstat -lntp
+  874  kill -9 6919
+  875  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  876  netstat -lntp
+  877  kill -9 7243
+  878  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  879  netstat -lntp
+  880  kill -9 8007
+  881  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  882  netstat -lntp
+  883  kill -9 8305
+  884  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  885  netstat -lntp
+  886  kill -9 8418
+  887  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  888  netstat -lntp
+  889  kill -9 8434
+  890  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  891  netstat -lntp
+  892  kill -9 8452
+  893  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  894  netstat -lntp
+  895  kill -9 8502
+  896  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  897  netstat -lntp
+  898  kill -9 8554
+  899  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  900  clusterssh all
+  901  ping 192.168.1.201
+  902  ssh 192.168.1.201
+  903  cd qtest/
+  904  nano integration.py
+  905  cat debug.log | grep second
+  906  cat debug.log | grep first
+  907  nano integration.py
+  908  python integration.py -i 30 -t 1000
+  909  ssh 192.168.1.235
+  910  python integration.py -i 30 -t 1000
+  911  nano integration.py -c
+  912  python integration.py -i 30 -t 1000
+  913  nano integration.py -c
+  914  python integration.py -i 30 -t 1000
+  915  nano integration.py -c
+  916  python integration.py -i 30 -t 1000
+  917  nano integration.py -c
+  918  python integration.py -i 30 -t 1000
+  919  nano qtest/firsttiercaller.py -c
+  920  python integration.py -i 30 -t 1000
+  921  nano integration.py
+  922  python integration.py -i 30 -t 1000
+  923  nano integration.py
+  924  python integration.py -i 30 -t 1000
+  925  nano integration.py
+  926  python integration.py -i 30 -t 1000
+  927  nano integration.py
+  928  python integration.py -i 30 -t 1000
+  929  mv debug.log debug.log.bak.bak
+  930  touch debug.log
+  931  python integration.py -i 30 -t 1000
+  932  nano integration.py
+  933  python integration.py -i 30 -t 1000
+  934  nano integration.py
+  935  python integration.py -i 30 -t 1000
+  936  nano qtest/resourceallocationcaller.py
+  937  nano integration.py
+  938  nano qtest/resourceallocationcaller.py
+  939  ssh 192.168.1.235
+  940  ping 192.168.1.235
+  941  ssh 192.168.1.235
+  942  ping 192.168.1.235
+  943  ssh 192.168.1.235 -v
+  944  ssh 192.168.1.235
+  945  ssh 192.168.1.235 -v
+  946  ping 192.168.1.235
+  947  ssh 192.168.1.235 -v
+  948  python integration.py -i 30 -t 1000
+  949  nano integration.py
+  950  python integration.py -i 30 -t 1000
+  951  nano integration.py
+  952  python integration.py -i 30 -t 1000
+  953  nano integration.py
+  954  python integration.py -i 30 -t 1000
+  955  nano integration.py
+  956  python integration.py -i 30 -t 1000
+  957  nano integration.py
+  958  python integration.py -i 30 -t 1000
+  959  nano integration.py
+  960  python integration.py -i 30 -t 1000
+  961  cd ..
+  962  cd  openflow_bandwidth/
+  963  python enforce_throughput_service.py 1834211266922944 192.168.1.235 [192.168.1.223] 5000
+  964  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' ['192.168.1.223'] 5000
+  965  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' ['192.168.1.223',] 5000
+  966  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' ['192.168.1.223'] 5000
+  967  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' ['192.168.1.223',] 5000
+  968  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' [u'192.168.1.205'] 5000
+  969  nano enforce_throughput_service.py 
+  970  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.205 5000
+  971  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 5000
+  972  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 500
+  973  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1000
+  974  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 15000
+  975  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1500
+  976  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1000
+  977  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1200
+  978  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1300
+  979  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1500
+  980  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 2000
+  981  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 1634
+  982  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 2000
+  983  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 20000
+  984  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 4000
+  985  python enforce_throughput_service.py 1834211266922944 '192.168.1.235' 192.168.1.223 3000
+  986  cd ..
+  987  cd qtest/
+  988  nano integration.py
+  989  python integration.py -i 30 -t 1000
+  990  cd ..
+  991  cd openflow_bandwidth/
+  992  python enforce_throughput_service.py 2115686243633600 '192.168.1.235' 192.168.1.220 4000
+  993  python enforce_throughput_service.py 2115686243633600 '192.168.1.235' 192.168.1.220 2000
+  994  python enforce_throughput_service.py 2115686243633600 '192.168.1.235' 192.168.1.208 2000
+  995  ryu-manager openflow_bandwidth/bandwidth_control_simple_switch_13.py
+  996  ls -l
+  997  mkdir qtest
+  998  mkdir qtest-tools
+  999* 
+ 1000  ls -l
+ 1001  mv qtest qtest-tools/
+ 1002  mv pre.sh qtest-tools/
+ 1003  mv go.sh qtest-tools/
+ 1004  cd qtest-tools/
+ 1005  cat go.sh 
+ 1006  cat pre.sh 
+ 1007  ls -l
+ 1008  cd ..
+ 1009  ls -l
+ 1010  zip qtest-tools/
+ 1011  sudo apt-get install zip
+ 1012  history > history.txt
