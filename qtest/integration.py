@@ -25,7 +25,7 @@ class Integration(object):
         self._parse_graph(self._load_graph(config))
         self._controller = self.Controller(host, port, self._testing)
         self._experience = self.Experience()
-        self._initialise_switch_ports()
+        #self._initialise_switch_ports()
         self._threshold = threshold
         self._poll(float(poll))
 
