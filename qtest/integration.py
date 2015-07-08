@@ -310,7 +310,7 @@ class Integration(object):
                 result = self._client.notify(kwargs['method'], *kwargs['params'])
                 result = None
                 logging.debug('[controller][result]: %s', result)
-                return result
+            return result
 
         def _generate_random_bandwidth(self, length):
             '''Generate a random bandwidth for testing purposes.'''
