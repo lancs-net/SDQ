@@ -2,7 +2,10 @@ Respository containing all the tools used for the QoE meets OpenFlow work. Also 
 
 Topology & Experiment
 --------
-Mu has a diagram of the topology, but here is a brief description of it:
+
+<img src=qtest/2tierdigram.png width=600  />
+
+Mu has a diagram of the topology (above), but here is a brief description of it:
 
 There are 5 households, each consisting of between 3 and 6 clients. The clients in a household are connected together by a single OpenFlow switch. These households are the second tier (and served by the ```resourceallocationcaller.py``` functions) This OpenFlow switch is also the gateway out of the local network. These switches are then connected to an arregation switch, which forms the first tier (represented in the ```firsttiercaller.py```). This switch is then connected to another switch, which has directly attached to it the background server and the foreground server.
 
