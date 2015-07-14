@@ -98,7 +98,7 @@ class Integration(object):
         for node in nodes:
             switch = self._get_field_from_node(node, "dpid")
             result = self._controller.call(method="report_switch_ports", params=[False, False, switch])
-            if self._compare_switch_ports(tier, switch, result):
+	    if self._compare_switch_ports(tier, switch, result):
                  self._recalculate(tier, switch)
 
     def _compare_switch_ports(self, tier, switch, result):
@@ -307,8 +307,8 @@ class Integration(object):
                     result = self._client.call(kwargs['method'], *kwargs['params'])
                 except pyjsonrpc.rpcerror.InternalError as e:
                     print e, kwargs
-                result = self._client.notify(kwargs['method'], *kwargs['params'])
-                result = None
+                #result = self._client.notify(kwargs['method'], *kwargs['params'])
+                #result = None
                 logging.debug('[controller][result]: %s', result)
             return result
 
