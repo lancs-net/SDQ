@@ -78,6 +78,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
+
+
+	#delete existing flows - stops conflicts
+	self.del_all_flows(datapath)
+
+
+
+
+
         # install table-miss flow entry
         #
         # We specify NO BUFFER to max_len of the output action due to
@@ -101,8 +110,8 @@ class SimpleSwitch13(app_manager.RyuApp):
     def add_flow(self, datapath, priority, match, actions, buffer_id=None, meter=None, timeout=0, cookie=0):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        # print ("Add flow, %s" % hex(cookie))
-
+        #print ("Add flow, %s" % hex(cookie))
+	self.logger.info("Adding flow")
         # print "The meter is :",meter
         if meter != None:
             # print "Sending flow mod with meter instruction, meter :", meter
@@ -123,7 +132,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         #Edit this
     def add_meter_port(self, datapath_id, port_no, speed):
-        # print "ADDING METER TO PORT"
+        print "ADDING METER TO PORT"
 
 	datapath_id = int(datapath_id)
 	
@@ -238,6 +247,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         #add meter to an existing flow through normal switch behaviour
         #doens't need implemented yet!
         return 1
+   
+    def del_all_flows(self, datapath):
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        # msg = parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL)
+        # datapath.send_msg(msg)
+        datapath.send_msg(parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL))
+
+
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -262,8 +280,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         dpid = datapath.id
 	# print('DPID', dpid)
         self.mac_to_port.setdefault(dpid, {})
-
-        #self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+	#self.logger.info("%s", self.datapathdict)
+        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
@@ -399,10 +417,10 @@ class SimpleSwitch13(app_manager.RyuApp):
             # pprint(oldStats)
             # print "newStats"
             # pprint(newStats)
-            print "Flow - current"
-            pprint(rate)
-            print "Flow - maximum"
-            pprint(maxStats)
+           # print "Flow - current"
+            #pprint(rate)
+            #print "Flow - maximum"
+            #pprint(maxStats)
 
     #handle flow stats replies
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
@@ -490,8 +508,8 @@ class SimpleSwitch13(app_manager.RyuApp):
             # pprint(oldStats)
             # print "newStats"
             # pprint(newStats)
-            print "Port - current"
-            pprint(rate)
-            print "Port - maximum"
-            pprint(maxStats)
+            #print "Port - current"
+            #pprint(rate)
+            #print "Port - maximum"
+            #pprint(maxStats)
 
