@@ -82,7 +82,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 	#delete existing flows - stops conflicts
 	self.del_all_flows(datapath)
-
+	self.send_barrier_request(datapath)
 
 
 
@@ -99,6 +99,10 @@ class SimpleSwitch13(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
 
         self.add_flow(datapath, 1, match, actions)
+
+
+	#no lldp
+	self.add_flow(datapath, 1, parser.OFPMatch(eth_type=0x88cc), [])
 
 
         #Add new switches for polling
@@ -130,14 +134,22 @@ class SimpleSwitch13(app_manager.RyuApp):
                                     hard_timeout=timeout, idle_timeout=timeout, table_id=100, cookie=cookie)
         datapath.send_msg(mod)
 
+
+    def send_barrier_request(self, datapath):
+        # ofp_parser = datapath.ofproto_parser
+        # req = ofp_parser.OFPBarrierRequest(datapath)
+        # datapath.send_msg(req)
+        datapath.send_msg(datapath.ofproto_parser.OFPBarrierRequest(datapath))
+
+
         #Edit this
     def add_meter_port(self, datapath_id, port_no, speed):
-        print "ADDING METER TO PORT"
+        print "ADDING METER TO PORT " + str(port_no) + " at " + str(speed) + " on dpid "+ str(datapath_id)
 
 	datapath_id = int(datapath_id)
 	
         if datapath_id not in self.datapathdict:
-		"dont have dick"
+		"dont have dictionary"
 		return -1
         datapath= self.datapathdict[datapath_id]
         
@@ -150,13 +162,14 @@ class SimpleSwitch13(app_manager.RyuApp):
         #change meter with meter_id <port_no>, on switch <datapath>, to have a rate of <speed>
 	# print datapath_id
 	
-	if datapath_id in self.datapathID_to_meters:
-            port_to_meter= self.datapathID_to_meters[datapath_id]
-	else:
+	if datapath_id not in self.datapathID_to_meters:
+	    self.datapathID_to_meters[datapath_id]={}
             # print "not in"
-            pass
+        port_to_meter = self.datapathID_to_meters[datapath_id]
+
         bands=[]
-        #set starting bit rate of meter
+        
+	#set starting bit rate of meter
         dropband = parser.OFPMeterBandDrop(rate=int(speed), burst_size=0)
 	bands.append(dropband)
         #Delete meter incase it already exists (other instructions pre installed will still work)
@@ -167,7 +180,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         datapath.send_msg(request)
 	# print request
         #Prvent overwriting incase rule added before traffic seen
-        port_to_meter[int(port_no)]=int(port_no)
+        
+        
+
+	port_to_meter[int(port_no)]=int(port_no)
 
 
 
@@ -175,7 +191,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         return 1
 
     def add_meter_service(self, datapath_id, src_addr, dst_addrs, speed):
-        print "ADDING METER FOR SERVICE"
+        print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + " on dpid " + str(datapath_id)
         datapath_id=int(datapath_id)
 	if datapath_id not in self.datapathdict:
             print "### Error: datapath_id not in self.datapathdict"
@@ -254,7 +270,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         # msg = parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL)
         # datapath.send_msg(msg)
         datapath.send_msg(parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL))
-
+	self.logger.debug("Delete all flows on dp %s", datapath.id)
 
 
 
@@ -281,7 +297,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 	# print('DPID', dpid)
         self.mac_to_port.setdefault(dpid, {})
 	#self.logger.info("%s", self.datapathdict)
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        self.logger.info("packet in %x %s %s %s", dpid, src, dst, in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
@@ -319,7 +335,8 @@ class SimpleSwitch13(app_manager.RyuApp):
                  datapath.send_msg(request)
                  request = parser.OFPMeterMod(datapath=datapath,command=ofproto.OFPMC_ADD, flags=ofproto.OFPMF_KBPS,meter_id=out_port,bands=bands)
                  datapath.send_msg(request)
-                 port_to_meter[out_port]=out_port
+                 
+		 port_to_meter[out_port]=out_port
 
 
 

@@ -153,6 +153,7 @@ class Integration(object):
             limit = self._convert_kilobits_to_bits(limit)
 	    src = '192.168.1.235'
 	    ip = [self._get_field_from_node(id_, 'ip')]
+	    print 'SWITCH %s', str(switch)
 	    self._controller.call(method="enforce_service", params=[str(switch), src, ip, limit])
 
     def _effect_first_tier_change(self, switch, result):
@@ -192,9 +193,10 @@ class Integration(object):
         #     switch = self._get_field_from_node(node, "dpid")
         #     totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
         totalbw = 100000 #TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
-        totalbw = self._convert_bits_to_kilobits(totalbw)
+        #totalbw = self._convert_bits_to_kilobits(totalbw)
         totalbw = totalbw - background
-        return (totalbw, households)
+        logging.debug("Background traffic %s",background)
+	return (totalbw, households)
 
     def _fetch_second_tier_stats(self, switch, dpid=True):
         '''Fetch the statistics from each of the hosts attached to a switch.'''
@@ -240,7 +242,7 @@ class Integration(object):
 
     def _convert_kilobits_to_bits(self, value):
         '''Convert kilobits to bits.'''
-        return value * 2 #TODO: This is a conversion that works, but not correct for kilobits to bits.
+        return value * 1000 #TODO: This is a conversion that works, but not correct for kilobits to bits.
 
     def _fetch_switch(self, node, neighbor, background):
         '''Fetch the background traffic and available bandwidth for a given switch.'''
