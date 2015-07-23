@@ -44,7 +44,7 @@ class FirstTier(object):
 
     def call(self, totalbw, households):
         self.linkcap={}
-        for household in households:
+	for household in households:
             self.linkcap[household[0]] = household[1]
         self.adjusthhuf(self.linkcap)
         share=self.getoptimalpoints(totalbw)

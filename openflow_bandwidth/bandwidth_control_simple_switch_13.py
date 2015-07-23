@@ -33,6 +33,7 @@ FlowStatRecord = namedtuple('FlowStatRecord', ['packet_count', 'byte_count', 'ma
 TimedFlowStatRecord = namedtuple('TimedFlowStatRecord', ['packet_count', 'byte_count', 'match', 'table_id', 'priority', 'duration_sec', 'duration_nsec'])
 
 class SimpleSwitch13(app_manager.RyuApp):
+    '''An extention of the simple example switch. This module includes remote installaiton and monitoring of meters'''
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
@@ -74,6 +75,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
+	'''Sends messages to switch to get information about them'''
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -110,9 +112,9 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 
 
-    #Add flow modified to allow meters
     def add_flow(self, datapath, priority, match, actions, buffer_id=None, meter=None, timeout=0, cookie=0):
-        ofproto = datapath.ofproto
+        '''Add a flow to a datapath - modified to allow meters'''
+	ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         #print ("Add flow, %s" % hex(cookie))
 	self.logger.info("Adding flow")
@@ -144,6 +146,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         #Edit this
     def add_meter_port(self, datapath_id, port_no, speed):
+    	'''Adds a meter to a port on a switch. speed argument is in kbps'''
         print "ADDING METER TO PORT " + str(port_no) + " at " + str(speed) + " on dpid "+ str(datapath_id)
 
 	datapath_id = int(datapath_id)
@@ -191,7 +194,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         return 1
 
     def add_meter_service(self, datapath_id, src_addr, dst_addrs, speed):
-        print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + " on dpid " + str(datapath_id)
+        '''Adds meters to a datapath. The meter is between a single src to many dsts. speed argument is in kbps'''
+	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + " on dpid " + str(datapath_id)
         datapath_id=int(datapath_id)
 	if datapath_id not in self.datapathdict:
             print "### Error: datapath_id not in self.datapathdict"
@@ -259,12 +263,9 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         return meter_id
 
-    def add_meter_flow(self, datapath_id, flow_id, speed):
-        #add meter to an existing flow through normal switch behaviour
-        #doens't need implemented yet!
-        return 1
-   
     def del_all_flows(self, datapath):
+	'''Deletes all flows. Useful for when the controller is restarted
+	   and we want to get rid of flows from a previous experiment'''
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         # msg = parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL)
@@ -276,7 +277,10 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        # If you hit this you might want to increase
+        '''Event triggered when packet is sent to the controller from the switch (packetin).
+	   Mods are install for the switch to remember the packet and for meters for the flow.'''
+
+	# If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
             self.logger.debug("packet truncated: only %s of %s bytes",
@@ -366,7 +370,7 @@ class SimpleSwitch13(app_manager.RyuApp):
     #handle meter stats replies
     @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
     def meter_stats_reply_handler(self, ev):
-
+	'''Event call back from a stats request'''
         def _unpack(meterStats):
             unpacked = {}
             for statsEntry in meterStats:
@@ -465,7 +469,8 @@ class SimpleSwitch13(app_manager.RyuApp):
     #handle port stats replies
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def port_stats_reply_handler(self, ev):
-
+	'''Event: reply of throughput on a datapath. Saved for later so it can be requested and analysed'''
+	#TODO change bytes to Kbits. Before change make sure everything that uses it is ready to use kbits not bytes	
         def _unpack(portStats):
             unpacked = {}
             for statsEntry in portStats:
@@ -519,14 +524,29 @@ class SimpleSwitch13(app_manager.RyuApp):
                                                       max(maxStats[port].rx_bytes,rate[port].rx_bytes) )
 
 
-# visualise the stats in the server side
+	    # visualise the stats in the server side
 
             # print "oldStats"
             # pprint(oldStats)
             # print "newStats"
             # pprint(newStats)
-            #print "Port - current"
-            #pprint(rate)
-            #print "Port - maximum"
-            #pprint(maxStats)
+            #TODO create debug stats that is easier to read. Only need kbits in/out on each port
+	    if '239' in str(ev.msg.datapath.id):
+		print 'Datapath t'
+            if '2115686243633600' in str(ev.msg.datapath.id):
+                print 'Datapath b'
+            if '708311360080320' in str(ev.msg.datapath.id):
+                print 'Datapath p1'
+            if '989786336790976' in str(ev.msg.datapath.id):
+                print 'Datapath p2'
+            if '1271261313501632' in str(ev.msg.datapath.id):
+                print 'Datapath p3'
+            if '1552736290212288' in str(ev.msg.datapath.id):
+                print 'Datapath p4'
+            if '1834211266922944' in str(ev.msg.datapath.id):
+                print 'Datapath p5'
+            print "Port - current"
+            pprint(rate)
+            print "Port - maximum"
+            pprint(maxStats)
 

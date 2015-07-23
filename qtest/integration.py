@@ -150,21 +150,22 @@ class Integration(object):
         '''Install a service meter in the second tier.'''
         for id_, allocation in result.iteritems():
             limit = allocation[3]
-            limit = self._convert_kilobits_to_bits(limit)
+	    #limit = self._convert_kilobits_to_bits(limit)#TODO should we be converting this value? What does the switch take?
 	    src = '192.168.1.235'
 	    ip = [self._get_field_from_node(id_, 'ip')]
-	    print 'SWITCH %s', str(switch)
+	    print 'Second tier change		 switch :',str(self._dp_name(switch)),' limit :',str(limit),'kbps', src, ip
 	    self._controller.call(method="enforce_service", params=[str(switch), src, ip, limit])
 
     def _effect_first_tier_change(self, switch, result):
         '''Install a service meter in the first tier.'''
         for household in result:
             neighbor = self._find_node_from_label("household", household["household_id"])
-        src = '192.168.1.235'
-        limit = household["limit"]
-        limit = self._convert_kilobits_to_bits(limit)
-        dsts = self._fetch_ips_from_household(neighbor)
-        self._controller.call(method="enforce_service", params=[str(switch), src, dsts, limit])
+            src = '192.168.1.235'
+            limit = household["limit"]
+	#limit = self._convert_kilobits_to_bits(limit) #TODO should we be converting this value? What does the switch take?
+            dsts = self._fetch_ips_from_household(neighbor)
+	    print 'First tier change			switch :',str(self._dp_name(switch)),' limit :', str(limit),'kbps', str(src),str(dsts)
+            self._controller.call(method="enforce_service", params=[str(switch), src, dsts, limit])
 
     def _fetch_ips_from_household(self, node):
         '''Fetch a the IPs of the hosts within a given household.'''
@@ -192,8 +193,7 @@ class Integration(object):
         #     port = self._get_field_from_edge((node, neighbor), "port")
         #     switch = self._get_field_from_node(node, "dpid")
         #     totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-        totalbw = 100000 #TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
-        #totalbw = self._convert_bits_to_kilobits(totalbw)
+        totalbw = 100000 #Kbps   TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
         totalbw = totalbw - background
         logging.debug("Background traffic %s",background)
 	return (totalbw, households)
@@ -238,11 +238,11 @@ class Integration(object):
 
     def _convert_bits_to_kilobits(self, value):
         '''Convert bits to kilobits.'''
-        return value/1000 #TODO: This is a conversion that works, but not correct for bits to kilobits.
+        return value/1000
 
     def _convert_kilobits_to_bits(self, value):
         '''Convert kilobits to bits.'''
-        return value * 1000 #TODO: This is a conversion that works, but not correct for kilobits to bits.
+        return value * 1000
 
     def _fetch_switch(self, node, neighbor, background):
         '''Fetch the background traffic and available bandwidth for a given switch.'''
@@ -250,7 +250,7 @@ class Integration(object):
         switch = self._get_field_from_node(node, "dpid")
         port = self._get_field_from_edge((node, neighbor), "port")
         #max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-        max_bandwidth = 20000 #TODO: Hard-coded according to experimental parameters
+        max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters
         for client in background:
             port = self._get_field_from_edge((node, client), "port")
         background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
@@ -278,6 +278,28 @@ class Integration(object):
             port = self._get_field_from_edge((node, neighbor), "port")
             limits.append({'household_id' : household_id, 'port' : port, 'limit' : limit})
         return limits
+
+
+    def _dp_name(self, dpid):
+	'''Converts dpids to openflow instance names. Just for debugging'''
+	name=dpid
+	if '239' in str(dpid):
+            name = 't'
+        elif '2115686243633600' in str(dpid):
+            name = 'b'
+        elif '708311360080320' in str(dpid):
+            name = 'p1'
+        elif '989786336790976' in str(dpid):
+            name = 'p2'
+        elif '1271261313501632' in str(dpid):
+            name = 'p3'
+        elif '1552736290212288' in str(dpid):
+            name = 'p4'
+        elif '1834211266922944' in str(dpid):
+            name = 'p5'
+
+	return name
+
 
     class Controller(object):
         '''Represents all communication with the controller.'''
@@ -322,6 +344,7 @@ class Integration(object):
             for _ in range(length):
                 bandwidth.append(random.randint(_min, _max))
             return bandwidth
+
 
     class Experience(object):
         '''Represents all communication with the QoE code.'''
