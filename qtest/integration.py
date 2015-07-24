@@ -97,7 +97,7 @@ class Integration(object):
         nodes = getattr(self, tier)
         for node in nodes:
             switch = self._get_field_from_node(node, "dpid")
-            result = self._controller.call(method="report_switch_ports", params=[False, False, switch])
+            result = self._controller.call(method="report_switch_ports", params=[False, False, switch]) #TODO check this is returning expected value ready for _compare_switch_ports
 	    if self._compare_switch_ports(tier, switch, result):
                  self._recalculate(tier, switch)
 
@@ -250,11 +250,11 @@ class Integration(object):
         switch = self._get_field_from_node(node, "dpid")
         port = self._get_field_from_edge((node, neighbor), "port")
         #max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-        max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters
+        max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters. Assumed bandwidth of 20mb
         for client in background:
             port = self._get_field_from_edge((node, client), "port")
         background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
-        background_traffic = self._convert_bits_to_kilobits(background_traffic)
+        background_traffic = self._convert_bits_to_kilobits(background_traffic)#TODO call returns bytes not bits - make call return kbits?
         available_bandwidth = max_bandwidth - background_traffic
         try:
             assert available_bandwidth >= 0

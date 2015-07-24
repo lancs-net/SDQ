@@ -106,6 +106,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 	#no lldp
 	self.add_flow(datapath, 1, parser.OFPMatch(eth_type=0x88cc), [])
 
+        #self.add_flow(datapath, 1, parser.OFPMatch(eth_dst="ff:ff:ff:ff:ff:ff"),[parser.OFPActionOutput(ofproto.OFPP_FLOOD,0)])        
 
         #Add new switches for polling
         self.datapathdict[datapath.id]=datapath
@@ -117,7 +118,11 @@ class SimpleSwitch13(app_manager.RyuApp):
 	ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         #print ("Add flow, %s" % hex(cookie))
-	self.logger.info("Adding flow")
+	
+	#If destination is FF do not install flow. (Caused by switches flooding each other)
+	
+
+	self.logger.info("Installing flow on %s",self._dp_name(datapath.id))
         # print "The meter is :",meter
         if meter != None:
             # print "Sending flow mod with meter instruction, meter :", meter
@@ -195,7 +200,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     def add_meter_service(self, datapath_id, src_addr, dst_addrs, speed):
         '''Adds meters to a datapath. The meter is between a single src to many dsts. speed argument is in kbps'''
-	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + " on dpid " + str(datapath_id)
+	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + "Kbps on dp " + _dp_name(datapath_id)
         datapath_id=int(datapath_id)
 	if datapath_id not in self.datapathdict:
             print "### Error: datapath_id not in self.datapathdict"
@@ -257,7 +262,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         	cookie = 0x7fffffff & crc32(str(datapath)+src_addr+dst_addr)
         	# print "cookie: %s" % hex(cookie)
-        	self.add_flow(datapath, 100, match, actions, buffer_id=None, meter=meter_id, timeout=0, cookie=cookie)
+		self.add_flow(datapath, 100, match, actions, buffer_id=None, meter=meter_id, timeout=0, cookie=cookie)
 
         self.datapathID_to_meter_ID[datapath_id]=meter_id+1
 
@@ -301,16 +306,15 @@ class SimpleSwitch13(app_manager.RyuApp):
 	# print('DPID', dpid)
         self.mac_to_port.setdefault(dpid, {})
 	#self.logger.info("%s", self.datapathdict)
-        self.logger.info("packet in %x %s %s %s", dpid, src, dst, in_port)
+        self.logger.info("packet in %s %s %s %s", self._dp_name(dpid), src, dst, in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
 
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
-        else:
+	else:
             out_port = ofproto.OFPP_FLOOD
-
         #get port to meter for this switch (mainly to see if meter already exists)
         #print self.datapathID_to_meters
 	#check if switch already seen
@@ -349,8 +353,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         actions = [parser.OFPActionOutput(out_port)]
 
         # install a flow to avoid packet_in next time
-        if out_port != ofproto.OFPP_FLOOD:
-            match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
+        if out_port != ofproto.OFPP_FLOOD and dst != "ff:ff:ff:ff:ff:ff":
+	    match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
             # verify if we have a valid buffer_id, if yes avoid to send both
             # flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
@@ -377,16 +381,11 @@ class SimpleSwitch13(app_manager.RyuApp):
                 meter = statsEntry.meter_id
                 first_band = statsEntry.band_stats[0]
                 assert len(statsEntry.band_stats) == 1 # this assertion ensures that the code is not used in more complex context than a single band without modification
-#                assert statsEntry.flow_count < 2       # this assertion enures that the code is not used in more complex context than a single flow per meter without modification
+		#assert statsEntry.flow_count < 2       # this assertion enures that the code is not used in more complex context than a single flow per meter without modification
                 unpacked[meter] = TimedMeterRecord (statsEntry.packet_in_count, statsEntry.byte_in_count, first_band.packet_band_count, first_band.byte_band_count, statsEntry.duration_sec, statsEntry.duration_nsec )
             return unpacked
 
-        # self.logger.info("meter_stats_reply_handler - switch %d", ev.msg.datapath.id )
-        # print "meter stats:"
-        # pprint(ev.msg.datapath.id)
-        # pprint(ev.msg.body)
         meterStats = _unpack(ev.msg.body)
-        # pprint(meterStats)
 
 
         # on first entry for a switch just save the stats, initiliase the max counters to zero and exit
@@ -432,16 +431,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                                                       max(maxStats[meter].byte_band_count,rate[meter].byte_band_count) )
 
 
-# visualise the stats in the server side
-
-            # print "oldStats"
-            # pprint(oldStats)
-            # print "newStats"
-            # pprint(newStats)
-           # print "Flow - current"
-            #pprint(rate)
-            #print "Flow - maximum"
-            #pprint(maxStats)
 
     #handle flow stats replies
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
@@ -455,12 +444,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                     unpacked[cookie] = TimedFlowStatRecord (statsEntry.packet_count, statsEntry.byte_count, statsEntry.match, statsEntry.table_id, statsEntry.priority, statsEntry.duration_sec, statsEntry.duration_nsec )
             return unpacked
 
-        # self.logger.info("flow_stats_reply_handler - switch %d", ev.msg.datapath.id )
-        # pprint(ev.msg.datapath.id)
-        # pprint(ev.msg.body)
         flowStats = _unpack(ev.msg.body)
-        # print "flow stats:"
-        # pprint(flowStats)
 
         # *** Unfinished stub - the returned flow stats should probably be saved in some global/persistent store.
         # *** Unfinished because the HP switches were observed not to return byte conters for any of the flows.
@@ -475,14 +459,16 @@ class SimpleSwitch13(app_manager.RyuApp):
             unpacked = {}
             for statsEntry in portStats:
                 port = statsEntry.port_no
-                if port != 4294967294: # this magic number is the 'local'port, which is not real....
-                    unpacked[port] = TimedPortStatRecord (statsEntry.tx_packets, statsEntry.rx_packets, statsEntry.tx_bytes, statsEntry.rx_bytes, statsEntry.duration_sec, statsEntry.duration_nsec )
+                if port != 4294967294: # this magic number is the 'local'port, which is not real.... 
+		    #WARNING. Change here from bytes to kbits. TODO change names to say tx_kbits
+                    unpacked[port] = TimedPortStatRecord (statsEntry.tx_packets, statsEntry.rx_packets, (statsEntry.tx_bytes*8)/1000, (statsEntry.rx_bytes*8)/1000, statsEntry.duration_sec, statsEntry.duration_nsec )
             return unpacked
 
+	maxStats_debug={}
+	rate_debug={}
 
         # on first entry for a switch just save the stats, initiliase the max counters to zero and exit
         if ev.msg.datapath.id not in self.PORT_CURRENT:
-            # self.logger.info("port_stats_reply_handler - first entry for switch %d", ev.msg.datapath.id )
             self.PORT_CURRENT[ev.msg.datapath.id] = _unpack(ev.msg.body)
             self.PORT_MAX[ev.msg.datapath.id] = {}
             self.PORT_RATE[ev.msg.datapath.id] = {}
@@ -492,18 +478,20 @@ class SimpleSwitch13(app_manager.RyuApp):
                     maxStats[statsEntry.port_no] = PortStatRecord(0,0,0,0)
 
         else: # we have a previous stats record so it is now possible to calculate the delta
-            # self.logger.info("port_stats_reply_handler - repeat entry for switch %d", ev.msg.datapath.id )
             oldStats = self.PORT_CURRENT[ev.msg.datapath.id]
             newStats = _unpack(ev.msg.body)
             self.PORT_CURRENT[ev.msg.datapath.id] = newStats # save away this dataset for the next time around...
             maxStats = self.PORT_MAX[ev.msg.datapath.id]     # always exists since it is initialised to zero on first stats report
             rate     = self.PORT_RATE[ev.msg.datapath.id]
-
+	
             for port in newStats:
             # now check if there are any new ports in this report - in which case we cannot do anything other than initilaise the max values to zero
                 if port not in oldStats:
                     maxStats[port] = PortStatRecord(0,0,0,0)
                     rate[port]     = PortStatRecord(0,0,0,0)
+
+		    maxStats_debug[port] = [0,0]
+                    rate_debug[port]     = [0,0]
                 else:
                     delta_time = self.diff_time(oldStats[port].duration_sec, oldStats[port].duration_nsec, newStats[port].duration_sec, newStats[port].duration_nsec)
                     # print "delta time: %f\n" % delta_time
@@ -511,7 +499,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                         print "diff_time failure(port stats)?"
                         pprint(ev.msg.body)
                     else:
-    
+   			#TODO change bytes to kbits 
                         rate[port] = PortStatRecord ((newStats[port].tx_packets - oldStats[port].tx_packets) / delta_time,
                                                         (newStats[port].rx_packets - oldStats[port].rx_packets) / delta_time,
                                                         (newStats[port].tx_bytes - oldStats[port].tx_bytes) / delta_time,
@@ -523,30 +511,41 @@ class SimpleSwitch13(app_manager.RyuApp):
                                                       max(maxStats[port].tx_bytes,rate[port].tx_bytes),
                                                       max(maxStats[port].rx_bytes,rate[port].rx_bytes) )
 
+						
+			rate_debug[port] = [format((((newStats[port].tx_bytes - oldStats[port].tx_bytes) / delta_time)),'.2f'),
+                                                       format((((newStats[port].rx_bytes - oldStats[port].rx_bytes) / delta_time)),'.2f')]
+
+                        maxStats_debug[port] = [format((max(maxStats[port].tx_bytes,rate[port].tx_bytes)),'.2f'),
+								format((max(maxStats[port].rx_bytes,rate[port].rx_bytes)),'.2f')]
+
 
 	    # visualise the stats in the server side
-
-            # print "oldStats"
-            # pprint(oldStats)
-            # print "newStats"
-            # pprint(newStats)
-            #TODO create debug stats that is easier to read. Only need kbits in/out on each port
-	    if '239' in str(ev.msg.datapath.id):
-		print 'Datapath t'
-            if '2115686243633600' in str(ev.msg.datapath.id):
-                print 'Datapath b'
-            if '708311360080320' in str(ev.msg.datapath.id):
-                print 'Datapath p1'
-            if '989786336790976' in str(ev.msg.datapath.id):
-                print 'Datapath p2'
-            if '1271261313501632' in str(ev.msg.datapath.id):
-                print 'Datapath p3'
-            if '1552736290212288' in str(ev.msg.datapath.id):
-                print 'Datapath p4'
-            if '1834211266922944' in str(ev.msg.datapath.id):
-                print 'Datapath p5'
-            print "Port - current"
-            pprint(rate)
+            print self._dp_name(ev.msg.datapath.id)
+	    print "Port - current"
+            pprint(rate_debug)
             print "Port - maximum"
-            pprint(maxStats)
+            pprint(maxStats_debug)
 
+
+
+
+
+    def _dp_name(self, dpid):
+        '''Converts dpids to openflow instance names. Just for debugging'''
+        name=dpid
+        if '239' in str(dpid):
+            name = 't'
+        elif '2115686243633600' in str(dpid):
+            name = 'b'
+        elif '708311360080320' in str(dpid):
+            name = 'p1'
+        elif '989786336790976' in str(dpid):
+            name = 'p2'
+        elif '1271261313501632' in str(dpid):
+            name = 'p3'
+        elif '1552736290212288' in str(dpid):
+            name = 'p4'
+        elif '1834211266922944' in str(dpid):
+            name = 'p5'
+
+        return name
