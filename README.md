@@ -55,7 +55,7 @@ At the moment, the API does not allow the mixing of flow-based and port-based mo
 
 All stats relating to bandwidth have/should’ve been changed to kilobits. When installing meters, API calls and what is represented in the meter tables as well as in practice (from *wget* and *iperf*) appear to be consistent.
 
-Currently the controller does not add flows instantly and sometime not at all. This is more apparent when many nodes are sending over the network. This needs to be fixed before the experiments can start. Flows are being installed for mac address destination ‘ff:ff:ff:ff:ff:ff’ to be forwarded on a specific port. This could be causing the problem of flows not installing properly.
+Currently the controller does not add flows instantly and sometime not at all. This is more apparent when many nodes are sending over the network. This needs to be fixed before the experiments can start.
 
 “ERROR: Impossible to fine optimial points.” exception when trying to calculate bandwidth split in the resourceallocationcaller.py. This is most likely due to incorrect input values in the config/hardcoded variables. 
 
