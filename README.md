@@ -39,6 +39,9 @@ There is a number of additional scripts I used in the experimentation. For examp
 
 There is two bash scripts used during the experiments. These were run simultaneously on each of the VMs using [cluster SSH](http://bit.ly/1dKcMNz). The ```/tools/pre.sh``` script was run before experiments started and basically ensured that there was connectivity between each of the hosts and the server. It prints a nice green message if there is, a big red ```[FAIL]``` if not. This helped debug connectivity issued before even before we started. The ```/tools/go.sh``` was run in a similar manner ()using cluster SSH) to start the tests. The one included is for the background traffic generation using *wget*; evidently, it will different on the hosts playing video (I forgot to retrieve that one, but it basically started Scootplayer pointing at the server and playing the desired version of Big Buck Bunny). I just called it the same so that you could simply hit ```$ ./go.sh``` and start the damned thing!
 
+An alternative to cssh was created because it had a tendency to close sessions or fail to open some. The experiments can be ran using [cluster command](https://github.com/lyndon160/cluster_command) simple RPC program which contains scripts specific to this experiment. The server is already installed and running on the clients.
+
+
 Samples
 -------
 
@@ -48,5 +51,13 @@ Current Limitations
 -------------------
 At the moment, the API does not allow the mixing of flow-based and port-based monitoring. This is because a packet will always match on the flow-based rule before the port-based rule (it has more detail, and is thus more specific; OpenFlow will always match on that first). It would be better if the flow-rule then matched on a port-rule, thus combining the two.
 
-There also appears to be an arbitary conversion factor between some of the calls. In the current implementation, I tuned this with some trial and error, so they may not be exactly right. This needs some time to confirm the responses from the API (and the underlying OpenFlow) are consistent. For example, the measurement from the switch does not seem to be the in the same format as the rate-limiting threshold. However, I did confirm that the results (at least those derviced from *wget* and *iperf*) where what I expected. Further experiments need to be done to confirm the result from Scootplayer are what we expect (and no, #inb4scootplayerisbroken).
+~~There also appears to be an arbitary conversion factor between some of the calls. In the current implementation, I tuned this with some trial and error, so they may not be exactly right. This needs some time to confirm the responses from the API (and the underlying OpenFlow) are consistent. For example, the measurement from the switch does not seem to be the in the same format as the rate-limiting threshold. However, I did confirm that the results (at least those derviced from *wget* and *iperf*) where what I expected. Further experiments need to be done to confirm the result from Scootplayer are what we expect (and no, #inb4scootplayerisbroken).~~
+
+All stats relating to bandwidth have/should’ve been changed to kilobits. When installing meters, API calls and what is represented in the meter tables as well as in practice (from *wget* and *iperf*) appear to be consistent.
+
+Currently the controller does not add flows instantly and sometime not at all. This is more apparent when many nodes are sending over the network. This needs to be fixed before the experiments can start.
+
+“ERROR: Impossible to fine optimial points.” exception when trying to calculate bandwidth split in the resourceallocationcaller.py. This is most likely due to incorrect input values in the config/hardcoded variables. 
+
+
 
