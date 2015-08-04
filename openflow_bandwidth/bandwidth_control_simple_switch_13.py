@@ -200,7 +200,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     def add_meter_service(self, datapath_id, src_addr, dst_addrs, speed):
         '''Adds meters to a datapath. The meter is between a single src to many dsts. speed argument is in kbps'''
-	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + "Kbps on dp " + _dp_name(datapath_id)
+	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + "Kbps on dp " + self._dp_name(datapath_id)
         datapath_id=int(datapath_id)
 	if datapath_id not in self.datapathdict:
             print "### Error: datapath_id not in self.datapathdict"
@@ -308,13 +308,19 @@ class SimpleSwitch13(app_manager.RyuApp):
 	#self.logger.info("%s", self.datapathdict)
         self.logger.info("packet in %s %s %s %s", self._dp_name(dpid), src, dst, in_port)
 
-        # learn a mac address to avoid FLOOD next time.
+        # learn a mac address to avoid FLOOD next time. Unless this is a flood! in which case we do not want to add it?
         self.mac_to_port[dpid][src] = in_port
+	
 
+	#Do not want to take destinations of flood. In that case, just flood.
         if dst in self.mac_to_port[dpid]:
+	    # print "RECOGNISED mac to port, dst is ", dst, " sending to ", self.mac_to_port[dpid][dst]
             out_port = self.mac_to_port[dpid][dst]
 	else:
             out_port = ofproto.OFPP_FLOOD
+	    #print "did not recognise, dst is ", dst
+
+
         #get port to meter for this switch (mainly to see if meter already exists)
         #print self.datapathID_to_meters
 	#check if switch already seen
@@ -354,7 +360,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         # install a flow to avoid packet_in next time
         if out_port != ofproto.OFPP_FLOOD and dst != "ff:ff:ff:ff:ff:ff":
-	    match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
+	    match = parser.OFPMatch(in_port=in_port, eth_dst=dst, eth_src=src)
             # verify if we have a valid buffer_id, if yes avoid to send both
             # flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
