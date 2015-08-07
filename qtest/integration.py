@@ -193,7 +193,7 @@ class Integration(object):
         #     port = self._get_field_from_edge((node, neighbor), "port")
         #     switch = self._get_field_from_node(node, "dpid")
         #     totalbw += self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-        totalbw = 100000 #Kbps   TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
+        totalbw = 50000 #Kbps   TODO: Hard-coded according to experimental parameters as passive measurement not exercising full link capacity
         totalbw = totalbw - background
         logging.debug("Background traffic %s",background)
 	return (totalbw, households)
@@ -210,6 +210,7 @@ class Integration(object):
         for foreground in neighbors["foreground"]:
             clients.append(self._fetch_foreground(node, foreground))
         totalbw, background = self._fetch_switch(node, neighbors["switch"][0], neighbors["background"])
+	print "Totalbw ",totalbw," clients ",clients," background",background
         return (totalbw, clients, background)
 
     def _classify_neighbors(self, node):
@@ -231,8 +232,8 @@ class Integration(object):
         port = self._get_field_from_edge((node, neighbor), "port")
     	switch = self._get_field_from_node(node, "dpid")
     	result = self._controller.call(method="report_port", params=[False, True, switch, port])
-    	available_bandwidth = result[2] #Tx - link max - no background to remove
-    	available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
+    	available_bandwidth = result[2] #Tx - link max - no background to remove TODO something is wrong here, very low values
+    	#available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
     	resolution = self._get_field_from_node(neighbor, "resolution")
         return ((neighbor, available_bandwidth, resolution))
 
@@ -249,12 +250,12 @@ class Integration(object):
         background_traffic = 0
         switch = self._get_field_from_node(node, "dpid")
         port = self._get_field_from_edge((node, neighbor), "port")
-        #max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
-        max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters. Assumed bandwidth of 20mb
+        max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
+        #max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters. Assumed bandwidth of 20mb
         for client in background:
             port = self._get_field_from_edge((node, client), "port")
         background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
-        background_traffic = self._convert_bits_to_kilobits(background_traffic)#TODO call returns bytes not bits - make call return kbits?
+        #background_traffic = self._convert_bits_to_kilobits(background_traffic)#TODO call returns bytes not bits - make call return kbits?
         available_bandwidth = max_bandwidth - background_traffic
         try:
             assert available_bandwidth >= 0

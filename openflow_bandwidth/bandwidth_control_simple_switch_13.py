@@ -8,6 +8,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
+from ryu.lib.packet import ipv4
 
 from ryu.app.wsgi import ControllerBase, WSGIApplication, route
 from ryu.base import app_manager
@@ -41,8 +42,9 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         self.mac_to_port = {}
         self.datapathdict = {}
-        #init polling thread
+	self.ip_to_port = {}
 
+        #init polling thread
         switchPoll = SwitchPoll()
         pollThread = Thread(target=switchPoll.run, args=(10,self.datapathdict))
         pollThread.start()
@@ -67,6 +69,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 	self.datapath_to_flows = {}
 
 
+
     @staticmethod
     def diff_time (t1_sec, t1_nsec, t2_sec, t2_nsec):
         def to_float (sec,nsec):
@@ -80,14 +83,9 @@ class SimpleSwitch13(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-
-
 	#delete existing flows - stops conflicts
 	self.del_all_flows(datapath)
 	self.send_barrier_request(datapath)
-
-
-
 
         # install table-miss flow entry
         #
@@ -100,9 +98,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
 
-        self.add_flow(datapath, 1, match, actions)
-
-
+	
+	#flow mod for table miss :packetin to contoller if unrecognised by switch
+	self.add_flow(datapath, 1, match, actions)
+	
 	#no lldp
 	self.add_flow(datapath, 1, parser.OFPMatch(eth_type=0x88cc), [])
 
@@ -113,7 +112,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 
 
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None, meter=None, timeout=0, cookie=0):
+    def add_flow(self, datapath, priority, match, actions, buffer_id=None, meters=[], timeout=0, cookie=0, table_num=100):
         '''Add a flow to a datapath - modified to allow meters'''
 	ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -121,39 +120,46 @@ class SimpleSwitch13(app_manager.RyuApp):
 	
 	#If destination is FF do not install flow. (Caused by switches flooding each other)
 	
-
+	inst = []
 	self.logger.info("Installing flow on %s",self._dp_name(datapath.id))
         # print "The meter is :",meter
-        if meter != None:
+
+	if actions != []:
+            inst.append(parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions))
+
+
+
+	for meter in meters:
             # print "Sending flow mod with meter instruction, meter :", meter
-            inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions),parser.OFPInstructionMeter(meter)]
-        else:
-            # print "Not sending instruction"
-            inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
+	    if meter == -1:
+	        inst.append(parser.OFPInstructionGotoTable(200))
+	    #elif meter<50:
+	    inst.append(parser.OFPInstructionMeter(meter))
+	#	table_num=200
+         #   else:
+	#	if actions != []:
+	#	     inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions),parser.OFPInstructionMeter(meter),parser.OFPInstructionGotoTable(200)]
+	#	else:
+	#	     inst = [parser.OFPInstructionMeter(meter),parser.OFPInstructionGotoTable(200)]
+
+
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
                                     instructions=inst, hard_timeout=timeout,
-                                    idle_timeout=timeout, table_id=100, cookie=cookie)
+                                    idle_timeout=timeout, table_id=table_num, cookie=cookie)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst,
-                                    hard_timeout=timeout, idle_timeout=timeout, table_id=100, cookie=cookie)
+                                    hard_timeout=timeout, idle_timeout=timeout, table_id=table_num, cookie=cookie)
         datapath.send_msg(mod)
 
-
     def send_barrier_request(self, datapath):
-        # ofp_parser = datapath.ofproto_parser
-        # req = ofp_parser.OFPBarrierRequest(datapath)
-        # datapath.send_msg(req)
         datapath.send_msg(datapath.ofproto_parser.OFPBarrierRequest(datapath))
 
-
-        #Edit this
     def add_meter_port(self, datapath_id, port_no, speed):
     	'''Adds a meter to a port on a switch. speed argument is in kbps'''
         print "ADDING METER TO PORT " + str(port_no) + " at " + str(speed) + " on dpid "+ str(datapath_id)
-
 	datapath_id = int(datapath_id)
 	
         if datapath_id not in self.datapathdict:
@@ -161,14 +167,11 @@ class SimpleSwitch13(app_manager.RyuApp):
 		return -1
         datapath= self.datapathdict[datapath_id]
         
-
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-
 	#METER ID's WILL DIRECTLY RELATE TO PORT NUMBERS
         #change meter with meter_id <port_no>, on switch <datapath>, to have a rate of <speed>
-	# print datapath_id
 	
 	if datapath_id not in self.datapathID_to_meters:
 	    self.datapathID_to_meters[datapath_id]={}
@@ -188,13 +191,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         datapath.send_msg(request)
 	# print request
         #Prvent overwriting incase rule added before traffic seen
-        
-        
-
 	port_to_meter[int(port_no)]=int(port_no)
-
-
-
 
         return 1
 
@@ -254,16 +251,20 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 
         #create flow with <src> and <dst> - with a higher priority than normal switch behaviour -
-        #action NORMAL && link to meter
+        #link to meter
 	for dst_addr in dst_addrs:
 		print dst_addr        	
 		match = parser.OFPMatch(eth_type=0x800, ipv4_src=src_addr, ipv4_dst=dst_addr)
         	actions = [parser.OFPActionOutput(ofproto.OFPP_NORMAL)]
-
+		#actions = []
         	cookie = 0x7fffffff & crc32(str(datapath)+src_addr+dst_addr)
         	# print "cookie: %s" % hex(cookie)
-		self.add_flow(datapath, 100, match, actions, buffer_id=None, meter=meter_id, timeout=0, cookie=cookie)
-
+		# adds both meter for service and port
+#		if dst_addr in self.ip_to_port[datapath_id]:
+#			self.add_flow(datapath, 100, match, actions, buffer_id=None, meters=[meter_id,self.ip_to_port[datapath_id][dst_addr]], timeout=0, cookie=cookie)
+#		else:
+		self.add_flow(datapath, 101, match, actions, buffer_id=None, meters=[meter_id], timeout=0, cookie=cookie)
+#			print "Warning ",dst_addr," not in   : ",self.ip_to_port[datapath_id]
         self.datapathID_to_meter_ID[datapath_id]=meter_id+1
 
         return meter_id
@@ -301,16 +302,27 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         dst = eth.dst
         src = eth.src
-
-        dpid = datapath.id
+        
+	dpid = datapath.id
 	# print('DPID', dpid)
         self.mac_to_port.setdefault(dpid, {})
+	self.ip_to_port.setdefault(dpid, {})
 	#self.logger.info("%s", self.datapathdict)
         self.logger.info("packet in %s %s %s %s", self._dp_name(dpid), src, dst, in_port)
 
+
+	if(pkt.get_protocol(ethernet.ethernet) and pkt.get_protocol(ipv4.ipv4)):
+             ip4 = pkt.get_protocol(ipv4.ipv4)
+
+             ip_dst = ip4.dst
+             ip_src = ip4.src
+             self.ip_to_port[dpid][ip_src] = in_port
+	  #   print self.ip_to_port
+
+
+
         # learn a mac address to avoid FLOOD next time. Unless this is a flood! in which case we do not want to add it?
         self.mac_to_port[dpid][src] = in_port
-	
 
 	#Do not want to take destinations of flood. In that case, just flood.
         if dst in self.mac_to_port[dpid]:
@@ -364,10 +376,10 @@ class SimpleSwitch13(app_manager.RyuApp):
             # verify if we have a valid buffer_id, if yes avoid to send both
             # flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(datapath, 2, match, actions, msg.buffer_id, meter=out_port, timeout=60)
+                self.add_flow(datapath, 2, match, actions, msg.buffer_id, meters=[out_port], timeout=60)
                 return
             else:
-                self.add_flow(datapath, 2, match, actions, meter=out_port, timeout=60)
+                self.add_flow(datapath, 2, match, actions, meters=[out_port], timeout=60)
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data

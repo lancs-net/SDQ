@@ -17,7 +17,7 @@ def main(argv):
 		print 'Could not connect to JSON-RPC server'
 		sys.exit(2)
 
-	usage = "usage: python enforce_throughput_service.py <switch_id> <src> <dst> <speed B/s>"
+	usage = "usage: python enforce_throughput_service.py <switch_id> <src> <dst> <speed kbits/s>"
 
 	try:
 		opts, args = getopt.getopt(argv,"h",[])
