@@ -49,13 +49,11 @@ I included  a sample output from the integration code in ```/samples/debug.log``
 
 Current Limitations
 -------------------
-At the moment, the API does not allow the mixing of flow-based and port-based monitoring. This is because a packet will always match on the flow-based rule before the port-based rule (it has more detail, and is thus more specific; OpenFlow will always match on that first). It would be better if the flow-rule then matched on a port-rule, thus combining the two. -- This is going to be fixed by creating two tables, one for flow based matches and one for port based matches. The per flow matches will include an instruction to go to a per port matches table, this combines the two and ensures that both meters are incremented. --
+At the moment, the API does not allow the mixing of flow-based and port-based monitoring. This is because a packet will always match on the flow-based rule before the port-based rule (it has more detail, and is thus more specific; OpenFlow will always match on that first). It would be better if the flow-rule then matched on a port-rule, thus combining the two. 
+
+Because of hardware limitations of the HP 3800 switches, a pipeline with multiple tables is not an option. Furthermore, the UFair algorithm is hierarchical and flow limits need to be place at both tiers, this means the port and flow limiting cannot be separated on to different tiers. As a result of this, port limiting has been done manually on the switch (not with OpenFlow), unfortunately because of how this drops packets it interferes with TCP throughput.
 
 ~~There also appears to be an arbitary conversion factor between some of the calls. In the current implementation, I tuned this with some trial and error, so they may not be exactly right. This needs some time to confirm the responses from the API (and the underlying OpenFlow) are consistent. For example, the measurement from the switch does not seem to be the in the same format as the rate-limiting threshold. However, I did confirm that the results (at least those derviced from *wget* and *iperf*) where what I expected. Further experiments need to be done to confirm the result from Scootplayer are what we expect (and no, #inb4scootplayerisbroken).~~
 
-All stats relating to bandwidth should’ve been changed to kilobits. When installing meters, API calls and what is represented in the meter tables as well as in practice (from *wget* and *iperf*), appear to be consistent.
-
-“ERROR: Impossible to fine optimial points.” exception when trying to calculate bandwidth split in the resourceallocationcaller.py. This is most likely due to incorrect input values in the config/hardcoded variables. 
-
-
+All stats relating to bandwidth have been changed to kilobits. When installing meters, API calls and what is represented in the meter tables as well as in practice (from *wget* and *iperf*), appear to be consistent.
 
