@@ -49,11 +49,25 @@ I included  a sample output from the integration code in ```/samples/debug.log``
 
 Current Limitations
 -------------------
-At the moment, the API does not allow the mixing of flow-based and port-based monitoring. This is because a packet will always match on the flow-based rule before the port-based rule (it has more detail, and is thus more specific; OpenFlow will always match on that first). It would be better if the flow-rule then matched on a port-rule, thus combining the two. 
+~~At the moment, the API does not allow the mixing of flow-based and port-based monitoring. This is because a packet will always match on the flow-based rule before the port-based rule (it has more detail, and is thus more specific; OpenFlow will always match on that first). It would be better if the flow-rule then matched on a port-rule, thus combining the two.~~
 
-Because of hardware limitations of the HP 3800 switches, a pipeline with multiple tables is not an option. Furthermore, the UFair algorithm is hierarchical and flow limits need to be place at both tiers, this means the port and flow limiting cannot be separated on to different tiers. As a result of this, port limiting has been done manually on the switch (not with OpenFlow), unfortunately because of how this drops packets it interferes with TCP throughput.
+This has been solved by using another HP switch thats sole purpose is to rate-limit ports using OpenFlow meters. The controller can be found at [Patch Controller](https://github.com/lyndon160/Patch-Controller.git)
+
 
 ~~There also appears to be an arbitary conversion factor between some of the calls. In the current implementation, I tuned this with some trial and error, so they may not be exactly right. This needs some time to confirm the responses from the API (and the underlying OpenFlow) are consistent. For example, the measurement from the switch does not seem to be the in the same format as the rate-limiting threshold. However, I did confirm that the results (at least those derviced from *wget* and *iperf*) where what I expected. Further experiments need to be done to confirm the result from Scootplayer are what we expect (and no, #inb4scootplayerisbroken).~~
 
 All stats relating to bandwidth have been changed to kilobits. When installing meters, API calls and what is represented in the meter tables as well as in practice (from *wget* and *iperf*), appear to be consistent.
+
+Process of experimenting
+---------------------
+1) Both the patch and bandwidth controllers must be running. (The patch controller is on all the time by default)
+2) On the looking glass, run ```$ ./load_experiments.sh``` found in ```/home/ubuntu/cluster_command/```
+3) Wait for a 10 seconds (this lets hosts start scootplayer) then run ```\qtest\integration.py``` on the bandwidth controller.
+4) Stop integration.py after experiment and collect results from ```\qtest\debug.log```
+
+
+
+
+
+
 
