@@ -15,11 +15,11 @@ These physical ports are then connected to a second physical switch. This switch
 
 qTest
 -----
-This is glues together the various elements. Confusingly, it includes both my integration code *and* Mu's QoE code, and can be found in the ```\qtest``` folder. The code to run is the ```\qtest\integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
+This is glues together the various elements. Confusingly, it includes both my integration code *and* Mu's QoE code, and can be found in the ```/qtest``` folder. The code to run is the ```/qtest/integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
 
-I've also included the config file used in the experiments (```\qtest\config.json```). It's basically a tree structure, describing the nodes (hosts, servers and switches) and the connections between them (the edges). The config is fairly self explanatory, but is rather tedious to build. 
+I've also included the config file used in the experiments (```/qtest/config.json```). It's basically a tree structure, describing the nodes (hosts, servers and switches) and the connections between them (the edges). The config is fairly self explanatory, but is rather tedious to build. 
 
-I've also documented the ```\qtest\integration.py``` code pretty well, so it should be relatively easy to modify it (which you will undoubtedly have to). There is some hardcoded variables at the start (the household mappings, for example). These might need to be changed if you scale things up or name things differently.
+I've also documented the ```/qtest/integration.py``` code pretty well, so it should be relatively easy to modify it (which you will undoubtedly have to). There is some hardcoded variables at the start (the household mappings, for example). These might need to be changed if you scale things up or name things differently.
 
 OpenFlow Bandwidth
 ------------------
@@ -62,8 +62,8 @@ Process of experimenting
 ---------------------
 1) Both the patch and bandwidth controllers must be running. (The patch controller is on all the time by default)
 2) On the looking glass, run ```$ ./load_experiments.sh``` found in ```/home/ubuntu/cluster_command/```
-3) Wait for a 10 seconds (this lets hosts start scootplayer) then run ```\qtest\integration.py``` on the bandwidth controller.
-4) Stop integration.py after experiment and collect results from ```\qtest\debug.log```
+3) Wait for a 10 seconds (this lets hosts start scootplayer) then run ```/qtest/integration.py``` on the bandwidth controller.
+4) Stop integration.py after experiment and collect results from ```/qtest/debug.log```
 
 
 
