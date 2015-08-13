@@ -61,8 +61,11 @@ All stats relating to bandwidth have been changed to kilobits. When installing m
 Process of experimenting
 ---------------------
 1) Both the patch and bandwidth controllers must be running. (The patch controller is on all the time by default)
+
 2) On the looking glass, run ```$ ./load_experiments.sh``` found in ```/home/ubuntu/cluster_command/```
+
 3) Wait for a 10 seconds (this lets hosts start scootplayer) then run ```/qtest/integration.py``` on the bandwidth controller.
+
 4) Stop integration.py after experiment and collect results from ```/qtest/debug.log```
 
 
