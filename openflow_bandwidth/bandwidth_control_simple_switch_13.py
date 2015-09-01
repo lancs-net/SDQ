@@ -276,9 +276,14 @@ class SimpleSwitch13(app_manager.RyuApp):
         parser = datapath.ofproto_parser
         # msg = parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL)
         # datapath.send_msg(msg)
-        datapath.send_msg(parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=ofproto.OFPTT_ALL))
-	self.logger.debug("Delete all flows on dp %s", datapath.id)
+        #datapath.send_msg(parser.OFPFlowMod(datapath=datapath, command=ofproto.OFPFC_DELETE, match=parser.OFPMatch(), table_id=100))
+	self.logger.info("Delete all flows on dp %s", datapath.id)
 
+        match = parser.OFPMatch()
+        instructions = []
+
+        flow_mod = datapath.ofproto_parser.OFPFlowMod(datapath, 0, 0, 100, ofproto.OFPFC_DELETE, 0, 0, 1, ofproto.OFPCML_NO_BUFFER, ofproto.OFPP_ANY, ofproto.OFPG_ANY, 0, match, instructions)
+	datapath.send_msg(flow_mod)
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
