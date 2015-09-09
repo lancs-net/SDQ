@@ -7,7 +7,6 @@ import random
 import logging
 import calendar
 import time
-
 from pygraph.classes.digraph import digraph
 from optparse import OptionParser
 
@@ -110,14 +109,17 @@ class Integration(object):
                 self._switch_port_results[switch][port] = throughput[2]
                 continue
             else:
-                current = throughput[1]
+                current = throughput[2]
+		print "Port", port," current ",current,"kpbs"
                 previous = self._switch_port_results[switch][port]
+		print "Port", port," previous ",previous,"kpbs" 
             self._switch_port_results[switch][port] = throughput[2]
             return self._calculate_difference(current, previous)
 
     def _calculate_difference(self, current, previous):
         '''Calculate the difference between the current and previous values.'''
-        difference = current - previous #download B/s
+        difference = current - previous
+	print "Difference ",abs(difference)
         if abs(difference) >= self._threshold:
             return True
 
@@ -150,19 +152,19 @@ class Integration(object):
         '''Install a service meter in the second tier.'''
         for id_, allocation in result.iteritems():
             limit = allocation[3]
-	    #limit = self._convert_kilobits_to_bits(limit)#TODO should we be converting this value? What does the switch take?
 	    src = '192.168.1.235'
 	    ip = [self._get_field_from_node(id_, 'ip')]
-	    print 'Second tier change		 switch :',str(self._dp_name(switch)),' limit :',str(limit),'kbps', src, ip
-	    self._controller.call(method="enforce_service", params=[str(switch), src, ip, limit])
-
+	    print 'Second tier change		 switch :',str(self._dp_name(switch)),' limit :',str(self._linear_meter_mapping(limit)),'kbps', src, ip
+	    self._controller.call(method="enforce_service", params=[str(switch), src, ip, self._linear_meter_mapping(limit)])
+    def _linear_meter_mapping(self, limit):
+	return limit*1.7-38.482
+#        return limit*1.592+200 
     def _effect_first_tier_change(self, switch, result):
         '''Install a service meter in the first tier.'''
         for household in result:
             neighbor = self._find_node_from_label("household", household["household_id"])
             src = '192.168.1.235'
             limit = household["limit"]
-	#limit = self._convert_kilobits_to_bits(limit) #TODO should we be converting this value? What does the switch take?
             dsts = self._fetch_ips_from_household(neighbor)
 	    print 'First tier change			switch :',str(self._dp_name(switch)),' limit :', str(limit),'kbps', str(src),str(dsts)
             self._controller.call(method="enforce_service", params=[str(switch), src, dsts, limit])
@@ -232,7 +234,7 @@ class Integration(object):
         port = self._get_field_from_edge((node, neighbor), "port")
     	switch = self._get_field_from_node(node, "dpid")
     	result = self._controller.call(method="report_port", params=[False, True, switch, port])
-    	available_bandwidth = result[2] #Tx - link max - no background to remove TODO something is wrong here, very low values
+    	available_bandwidth = result[2] #Tx - link max
     	#available_bandwidth = self._convert_bits_to_kilobits(available_bandwidth)
     	resolution = self._get_field_from_node(neighbor, "resolution")
         return ((neighbor, available_bandwidth, resolution))
@@ -252,16 +254,17 @@ class Integration(object):
         port = self._get_field_from_edge((node, neighbor), "port")
         max_bandwidth = self._controller.call(method="report_port", params=[False, True, switch, port])[3] #Rx - link max
         #max_bandwidth = 20000 #Kbps TODO: Hard-coded according to experimental parameters. Assumed bandwidth of 20mb
-        for client in background:
+        print background
+	for client in background:
             port = self._get_field_from_edge((node, client), "port")
-        background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
-        #background_traffic = self._convert_bits_to_kilobits(background_traffic)#TODO call returns bytes not bits - make call return kbits?
+            background_traffic += self._controller.call(method="report_port", params=[False, False, switch, port])[2] #Tx - current background
         available_bandwidth = max_bandwidth - background_traffic
         try:
             assert available_bandwidth >= 0
         except AssertionError:
             print available_bandwidth, max_bandwidth, background_traffic
-        return available_bandwidth, background_traffic
+            pass
+	return available_bandwidth, background_traffic
 
     def _find_node_from_label(self, field, value):
         '''Find a node from a given label.'''
@@ -377,7 +380,7 @@ class Integration(object):
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("-i", "--interval", dest="interval", help="controller polling interval, measured in seconds", default=5.0)
-    parser.add_option("-t", "--threshold", dest="threshold", help="change threshold at which to trigger a recalculation, measured in bytes", default=1000)
+    parser.add_option("-t", "--threshold", dest="threshold", help="change threshold at which to trigger a recalculation, measured in kbits", default=200)
     parser.add_option("-c", "--capacity", dest="capacity", help="maximum capacity to initialise meter to, measured in bytes", default=1000000000)
     parser.add_option("-n", "--hostname", dest="host", help="controller hostname", default="localhost")
     parser.add_option("-p", "--port", dest="port", help="controller interface port", default=4000)

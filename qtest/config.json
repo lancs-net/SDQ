@@ -1,5 +1,5 @@
-{
-    "nodes" : {
+
+{"nodes" : {
         "switch" : {
             "p1" : {
                 "dpid" : 708311360080320,
@@ -287,7 +287,7 @@
         "a-b" : {
             "items" : ["a", "b"],
             "port" : 38,
-            "limit" : 1000000
+            "limit" : 500000
         },
         "a-background" : {
             "items" : ["a", "background"],

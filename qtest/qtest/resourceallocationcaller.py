@@ -56,9 +56,16 @@ class SecondTier(object):
     standarduf['1080']=-3.035 * (x**(-0.5061)) + 1.022
     ##Initialize MPD
     representations={}
-    representations['360']=[100,200,400,600,800,1000]
-    representations['720']=[100,200,400,600,800,1000,1500,2000]
-    representations['1080']=[100,200,600,1000,2000,4000,6000,8000]
+#    representations['360']=[100,200,400,600,800,1000]
+#    representations['720']=[100,200,400,600,800,1000,1500,2000]
+#    representations['1080']=[100,200,600,1000,2000,4000,6000,8000]
+
+
+    representations['360']=[331,529,720,922,1124]
+    representations['720']=[530,728,926,1120,1620,2120]
+    representations['1080']=[629,1090,2300,4136,5790,8082]
+
+
 
 #    def __init__(self):
 #	logging.info('test')
@@ -172,7 +179,7 @@ class SecondTier(object):
             break
         #print result
         for client in clients:
-	    print result[client]
+	  #/  print result[client]
             clients[client].append(float(result[client]))
         return clients
 

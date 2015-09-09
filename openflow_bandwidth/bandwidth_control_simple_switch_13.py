@@ -46,7 +46,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         #init polling thread
         switchPoll = SwitchPoll()
-        pollThread = Thread(target=switchPoll.run, args=(10,self.datapathdict))
+        pollThread = Thread(target=switchPoll.run, args=(3,self.datapathdict))
         pollThread.start()
         # print "Created polling threads"
 
@@ -121,7 +121,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 	#If destination is FF do not install flow. (Caused by switches flooding each other)
 	
 	inst = []
-	self.logger.info("Installing flow on %s",self._dp_name(datapath.id))
+	#self.logger.info("Installing flow on %s",self._dp_name(datapath.id))
         # print "The meter is :",meter
 
 	if actions != []:
@@ -197,7 +197,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     def add_meter_service(self, datapath_id, src_addr, dst_addrs, speed):
         '''Adds meters to a datapath. The meter is between a single src to many dsts. speed argument is in kbps'''
-	print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + "Kbps on dp " + self._dp_name(datapath_id)
+	#print "ADDING METER FOR SERVICE from " + str(src_addr) + " to "+ str(dst_addrs) + " at " + str(speed) + "Kbps on dp " + self._dp_name(datapath_id)
         datapath_id=int(datapath_id)
 	if datapath_id not in self.datapathdict:
             print "### Error: datapath_id not in self.datapathdict"
@@ -313,9 +313,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.mac_to_port.setdefault(dpid, {})
 	self.ip_to_port.setdefault(dpid, {})
 	#self.logger.info("%s", self.datapathdict)
-        self.logger.info("packet in %s %s %s %s", self._dp_name(dpid), src, dst, in_port)
+ 	if dst != "ff:ff:ff:ff:ff:ff":
+       	      #self.logger.info("packet in %s %s %s %s", self._dp_name(dpid), src, dst, in_port)
 
-
+	     pass
 	if(pkt.get_protocol(ethernet.ethernet) and pkt.get_protocol(ipv4.ipv4)):
              ip4 = pkt.get_protocol(ipv4.ipv4)
 
@@ -323,7 +324,7 @@ class SimpleSwitch13(app_manager.RyuApp):
              ip_src = ip4.src
              self.ip_to_port[dpid][ip_src] = in_port
 	  #   print self.ip_to_port
-
+	     #print ip_src, ip_dst
 
 
         # learn a mac address to avoid FLOOD next time. Unless this is a flood! in which case we do not want to add it?
@@ -439,7 +440,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                     # print "delta time: %f\n" % delta_time
                     if (delta_time<0):
                         print "diff_time failure(flow stats)?"
-                        pprint(ev.msg.body)
+                        #pprint(ev.msg.body)
                     else:
     
                         rate[meter] = MeterRecord ((newStats[meter].packet_in_count - oldStats[meter].packet_in_count) / delta_time,
@@ -519,8 +520,9 @@ class SimpleSwitch13(app_manager.RyuApp):
                     delta_time = self.diff_time(oldStats[port].duration_sec, oldStats[port].duration_nsec, newStats[port].duration_sec, newStats[port].duration_nsec)
                     # print "delta time: %f\n" % delta_time
                     if (delta_time<0):
-                        print "diff_time failure(port stats)?"
-                        pprint(ev.msg.body)
+                        #print "diff_time failure(port stats)?"
+                        #pprint(ev.msg.body)
+			pass
                     else:
    			#TODO change bytes to kbits 
                         rate[port] = PortStatRecord ((newStats[port].tx_packets - oldStats[port].tx_packets) / delta_time,
@@ -543,7 +545,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 
 	    # visualise the stats in the server side
-            print self._dp_name(ev.msg.datapath.id)
+            print "##############"
+	    print self._dp_name(ev.msg.datapath.id)
 	    print "Port - current"
             pprint(rate_debug)
             print "Port - maximum"
