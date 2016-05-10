@@ -1,3 +1,7 @@
+#SDQ
+SDN experimentation framework (SDQ), which offers rapid evaluation of QoE models using real network infrastructures.
+
+
 Respository containing all the tools used for the QoE meets OpenFlow work. Also explains how far we got with experimentation.
 
 Topology & Experiment
@@ -69,8 +73,13 @@ Process of experimenting
 4) Stop integration.py after experiment and collect results from ```/qtest/debug.log```
 
 
+Future work
+---------------------
+Test with other OpenFlow switches.
 
+Provide a setup for experimenting in MiniNet using the CPqD openflow 1.3 software switch.
 
+Expose more capabilities of the testbed (virtualisation and openflow) to offer a platform for non-QoE based experiments.
 
 
 
