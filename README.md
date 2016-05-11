@@ -4,7 +4,7 @@ SDN experimentation framework (SDQ), which offers rapid evaluation of QoE models
 
 Respository containing all the tools used for the QoE meets OpenFlow work. Also explains how far we got with experimentation.
 
-Topology & Experiment
+Example Topology & Experiment
 --------
 
 <img src=qtest/2tierdigram.png width=600  />
@@ -17,9 +17,9 @@ In reality, each of these hosts and servers are virtual machines sat on the Open
 
 These physical ports are then connected to a second physical switch. This switch is concertinaed into a number of virtual switches, each acting as a separate entity. The wiring is done to replicate the above topology.
 
-qTest
+UFair
 -----
-This is glues together the various elements. Confusingly, it includes both my integration code *and* Mu's QoE code, and can be found in the ```/qtest``` folder. The code to run is the ```/qtest/integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
+This is glues together the various elements. It includes both my integration code *and* Mu's QoE code, and can be found in the ```/qtest``` folder. The code to run is the ```/qtest/integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
 
 I've also included the config file used in the experiments (```/qtest/config.json```). It's basically a tree structure, describing the nodes (hosts, servers and switches) and the connections between them (the edges). The config is fairly self explanatory, but is rather tedious to build. 
 
