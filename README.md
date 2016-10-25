@@ -2,7 +2,7 @@
 SDN experimentation framework (SDQ), which offers rapid evaluation of QoE models using real network infrastructures.
 
 
-Respository containing all the tools used for the QoE meets OpenFlow work. Also explains how far we got with experimentation.
+Respository containing all the tools used for the QoE meets OpenFlow work as well as some case studies.
 
 Example Topology & Experiment
 --------
@@ -19,7 +19,7 @@ These physical ports are then connected to a second physical switch. This switch
 
 UFair
 -----
-This is glues together the various elements. It includes both my integration code *and* Mu's QoE code, and can be found in the ```/qtest``` folder. The code to run is the ```/qtest/integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
+This is glues together the various elements. It includes both my integration code *and* the QoE code, and can be found in the ```/qtest``` folder. The code to run is the ```/qtest/integration.py``` script. This will do the talking between the OpenFlow controller and Mu's QoE code. Try ```python integration.py -h``` to check out the parameters you can pass. To install the required packages, run ```pip install -r requirements.txt```; that should install everything. 
 
 I've also included the config file used in the experiments (```/qtest/config.json```). It's basically a tree structure, describing the nodes (hosts, servers and switches) and the connections between them (the edges). The config is fairly self explanatory, but is rather tedious to build. 
 
@@ -34,7 +34,7 @@ The version I used has minor changes to the parameters in the *enforce_services*
 
 Scootplayer
 -----------
-An unmodified version of Scootplayer was used. This can be found [here](https://github.com/broadbent/scootplayer). Ask Mu for the dataset. I'll see if we still have the various MPDs, but they are easy to create and modify.
+An unmodified version of Scootplayer was used. This can be found [here](https://github.com/broadbent/scootplayer). Dataset is available upon request. I'll see if we still have the various MPDs, but they are easy to create and modify.
 
 Tools
 -----
