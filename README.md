@@ -1,4 +1,7 @@
 #SDQ
+
+Please see https://github.com/lyndon160/REF for the updated version of SDQ.
+
 SDN experimentation framework (SDQ), which offers rapid evaluation of QoE models using real network infrastructures.
 
 
